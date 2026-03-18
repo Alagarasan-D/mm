@@ -1,0 +1,817 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CS MEMORIES</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono&display=swap');
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background:#f9f9f7;
+    font-family:'Space Mono',monospace;
+    overflow:hidden;
+    height:100vh; width:100vw;
+  }
+
+  /* ── LOADING SCREEN ── */
+  #loading-screen {
+    position:fixed; inset:0;
+    display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+    background:#f9f9f7; z-index:100;
+    transition:opacity 0.9s ease;
+  }
+  #loading-screen.fade-out { opacity:0; pointer-events:none; }
+
+  canvas#smoke {
+    position:absolute; inset:0;
+    width:100%; height:100%;
+    pointer-events:none;
+  }
+
+  .load-content {
+    position:relative; z-index:10;
+    display:flex; flex-direction:column; align-items:center;
+  }
+
+  .load-title {
+    font-family:'Bebas Neue',sans-serif;
+    font-size:clamp(56px,13vw,140px);
+    letter-spacing:0.2em; color:#111;
+    line-height:1; text-align:center; user-select:none;
+  }
+
+  .load-sub {
+    font-size:8px; letter-spacing:0.6em;
+    color:#bbb; text-transform:uppercase;
+    margin-top:8px; margin-bottom:72px;
+  }
+
+  .progress-wrap { width:min(260px,68vw); }
+
+  .progress-track {
+    width:100%; height:1px;
+    background:#ddd; overflow:hidden;
+  }
+
+  .progress-bar {
+    height:100%; background:#111;
+    width:0%; transition:width 0.1s linear;
+  }
+
+  .progress-meta {
+    display:flex; justify-content:space-between;
+    margin-top:10px; font-size:8px;
+    letter-spacing:0.25em; color:#ccc; text-transform:uppercase;
+  }
+  .progress-pct { color:#111; }
+
+  /* ── PLAYER ── */
+  #player-screen {
+    position:fixed; inset:0; background:#000;
+    display:flex; align-items:center; justify-content:center;
+    opacity:0; pointer-events:none;
+    transition:opacity 0.9s ease;
+  }
+  #player-screen.active { opacity:1; pointer-events:all; }
+
+  #main-video { width:100%; height:100%; object-fit:contain; }
+
+  .hud {
+    position:absolute; inset:0;
+    opacity:0; transition:opacity 0.4s; pointer-events:none;
+  }
+  #player-screen:hover .hud,
+  #player-screen:focus .hud { opacity:1; pointer-events:all; }
+
+  .hud-counter {
+    position:absolute; top:22px; right:26px;
+    font-size:9px; letter-spacing:0.3em;
+    color:rgba(255,255,255,0.4);
+  }
+
+  .hud-dots {
+    position:absolute; bottom:26px;
+    left:50%; transform:translateX(-50%);
+    display:flex; gap:14px; align-items:center;
+  }
+
+
+  /* ══════════════════════════════════════
+     BLACK SCREEN
+  ══════════════════════════════════════ */
+  #black-screen {
+    position:fixed; inset:0; background:#000;
+    z-index:150; opacity:0; pointer-events:none;
+    transition:opacity 1s ease;
+  }
+  #black-screen.active { opacity:1; pointer-events:all; }
+
+  /* ══════════════════════════════════════
+     CREDITS SCREEN
+  ══════════════════════════════════════ */
+  #credits-screen {
+    position:fixed; inset:0; background:#000;
+    z-index:200; opacity:0; pointer-events:none;
+    transition:opacity 1.5s ease;
+    overflow:hidden;
+  }
+  #credits-screen.active { opacity:1; pointer-events:all; }
+
+  /* CRT scanlines */
+  #credits-screen::before {
+    content:''; position:fixed; inset:0;
+    z-index:1; pointer-events:none;
+    background:repeating-linear-gradient(0deg,
+      transparent,transparent 2px,
+      rgba(0,0,0,0.1) 2px,rgba(0,0,0,0.1) 4px);
+  }
+
+  /* Top + bottom fade masks */
+  #credits-screen::after {
+    content:''; position:fixed; inset:0;
+    z-index:3; pointer-events:none;
+    background:
+      linear-gradient(to bottom, #000 0%, transparent 12%),
+      linear-gradient(to top,    #000 0%, transparent 12%);
+  }
+
+  /* The scrolling reel */
+  #credits-reel {
+    position:absolute;
+    left:50%; transform:translateX(-50%);
+    width:min(680px,90vw);
+    text-align:center;
+    z-index:2;
+    padding-bottom:100vh;
+    top:100vh;
+  }
+
+  /* ── Typewriter cursor ── */
+  .tw-cursor {
+    display:inline-block;
+    width:2px; height:0.9em;
+    background:#ffd700;
+    vertical-align:middle;
+    margin-left:2px;
+    animation:twBlink 0.55s step-end infinite;
+    box-shadow:0 0 10px #ffd700;
+  }
+  @keyframes twBlink { 50%{opacity:0;} }
+
+  /* ── THE END — adjusted size ── */
+  .c-the-end {
+    font-family:'Bebas Neue',sans-serif;
+    font-size:clamp(3.5rem,12vw,7rem);
+    letter-spacing:0.2em;
+    background:linear-gradient(135deg,#ffd700,#ffaa00,#ff7b00,#ff5500,#ffaa00,#ffd700);
+    background-size:400%;
+    background-clip:text; -webkit-background-clip:text;
+    color:transparent; -webkit-text-fill-color:transparent;
+    filter:drop-shadow(0 0 40px rgba(255,215,0,0.8));
+    animation:theEndShimmer 4s linear infinite;
+    line-height:1; display:block;
+    margin-bottom:52px;
+    text-shadow:0 0 30px rgba(255,200,0,0.5);
+  }
+  @keyframes theEndShimmer {
+    0%{background-position:0% 50%} 100%{background-position:400% 50%}
+  }
+
+  /* ── Divider ── */
+  .c-div {
+    width:min(380px,78%); height:1px; margin:30px auto;
+    background:linear-gradient(90deg,transparent,rgba(255,215,0,0.3),rgba(255,255,255,0.5),rgba(255,215,0,0.3),transparent);
+  }
+  .c-div.gold {
+    background:linear-gradient(90deg,transparent,rgba(255,215,0,0.6),#ffd700,rgba(255,215,0,0.6),transparent);
+    height:2px;
+    box-shadow:0 0 20px rgba(255,215,0,0.4);
+  }
+
+  /* ── Section heading ── */
+  .c-heading {
+    font-family:'Bebas Neue',sans-serif;
+    font-size:clamp(0.9rem,2.7vw,1.4rem);
+    letter-spacing:0.6em;
+    color:#ffffff;
+    text-transform:uppercase;
+    margin-bottom:22px;
+    min-height:1em;
+    text-shadow:0 0 20px rgba(255,255,255,0.5), 0 0 40px rgba(255,215,0,0.3);
+    opacity:0.95;
+  }
+
+  /* ── Credit rows ── */
+  .c-grid { display:flex; flex-direction:column; gap:0; }
+
+  .c-row {
+    display:flex; justify-content:space-between; align-items:center;
+    padding:14px 0;
+    border-bottom:1px solid rgba(255,215,0,0.15);
+    transition:all 0.3s ease;
+  }
+  .c-row:hover {
+    border-bottom-color:rgba(255,215,0,0.5);
+    transform:scale(1.02);
+  }
+  .c-row:last-child { border-bottom:none; }
+
+  .c-role {
+    font-family:'Space Mono',monospace;
+    font-size:clamp(0.6rem,1.4vw,0.75rem);
+    letter-spacing:0.36em;
+    color:#e0e0e0;
+    text-transform:uppercase;
+    min-height:1em;
+    text-shadow:0 0 15px rgba(255,255,255,0.3);
+    font-weight:300;
+  }
+
+  .c-name {
+    font-family:'Bebas Neue',sans-serif;
+    font-size:clamp(1.3rem,3.5vw,2rem);
+    letter-spacing:0.16em;
+    min-height:1em;
+    transition:all 0.3s ease;
+  }
+  .c-name:hover {
+    transform:scale(1.05);
+    filter:brightness(1.2);
+  }
+  
+  .c-name.n1 { 
+    color:#ffd700;
+    text-shadow:0 0 30px rgba(255,215,0,0.8), 0 0 60px rgba(255,215,0,0.4);
+  }
+  .c-name.n2 { 
+    color:#00ffff;
+    text-shadow:0 0 30px rgba(0,255,255,0.8), 0 0 60px rgba(0,255,255,0.4);
+  }
+  .c-name.n3 { 
+    color:#ff69b4;
+    text-shadow:0 0 30px rgba(255,105,180,0.8), 0 0 60px rgba(255,105,180,0.4);
+  }
+  .c-name.n4 { 
+    color:#7fffd4;
+    text-shadow:0 0 30px rgba(127,255,212,0.8), 0 0 60px rgba(127,255,212,0.4);
+  }
+
+  /* ── Body text ── */
+  .c-body {
+    font-family:'Space Mono',monospace;
+    font-size:clamp(0.7rem,1.8vw,0.9rem);
+    line-height:2.4;
+    color:#ffffff;
+    font-style:italic;
+    min-height:1em;
+    text-shadow:0 0 15px rgba(255,255,255,0.4);
+    background:linear-gradient(135deg, #ffffff, #f0f0f0);
+    background-clip:text;
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
+    font-weight:500;
+  }
+
+  /* ── Special thanks box ── */
+  .c-special-box {
+    background:rgba(255,215,0,0.08);
+    border:1px solid rgba(255,215,0,0.3);
+    border-left:4px solid #ffd700;
+    border-radius:8px;
+    padding:clamp(16px,3.5vw,26px) clamp(16px,3.5vw,28px);
+    text-align:left;
+    font-family:'Space Mono',monospace;
+    font-size:clamp(0.65rem,1.6vw,0.85rem);
+    line-height:2.5;
+    color:#f0f0f0;
+    min-height:1em;
+    box-shadow:0 0 30px rgba(255,215,0,0.2);
+    backdrop-filter:blur(2px);
+  }
+  .c-special-box strong { 
+    color:#ffd700;
+    text-shadow:0 0 20px rgba(255,215,0,0.6);
+    font-weight:bold;
+  }
+
+  /* ── Final message ── */
+  .c-final {
+    font-family:'Bebas Neue',sans-serif;
+    font-size:clamp(1.2rem,3.5vw,2.2rem);
+    letter-spacing:0.2em;
+    color:#ffffff;
+    line-height:1.8;
+    min-height:1em;
+    text-shadow:0 0 25px rgba(255,255,255,0.6), 0 0 50px rgba(255,215,0,0.3);
+    background:linear-gradient(135deg, #ffffff, #fff5e6);
+    background-clip:text;
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
+  }
+
+  /* ── Memorable quote ── */
+  .c-quote {
+    font-family:'Space Mono',monospace;
+    font-size:clamp(0.7rem,1.8vw,0.9rem);
+    font-style:italic;
+    color:#f5f5f5;
+    line-height:2.3;
+    padding:28px 0;
+    border-top:1px solid rgba(255,215,0,0.3);
+    border-bottom:1px solid rgba(255,215,0,0.3);
+    min-height:1em;
+    text-shadow:0 0 20px rgba(255,255,255,0.3);
+    letter-spacing:0.05em;
+  }
+
+  /* ── BACK BUTTON ── */
+  #back-button-container {
+    position:fixed;
+    bottom:40px;
+    left:50%;
+    transform:translateX(-50%);
+    z-index:500;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity 1s ease;
+    text-align:center;
+  }
+  #back-button-container.visible {
+    opacity:1;
+    pointer-events:all;
+  }
+  .back-btn {
+    display:inline-block;
+    padding:16px 48px;
+    background:linear-gradient(135deg, rgba(255,215,0,0.15), rgba(255,255,255,0.05));
+    border:2px solid #ffd700;
+    border-radius:60px;
+    font-family:'Bebas Neue',sans-serif;
+    font-size:clamp(1.3rem,2.8vw,2rem);
+    letter-spacing:0.4em;
+    color:#ffd700;
+    text-decoration:none;
+    text-transform:uppercase;
+    cursor:pointer;
+    backdrop-filter:blur(10px);
+    box-shadow:0 0 40px rgba(255,215,0,0.4), 0 0 80px rgba(255,215,0,0.2);
+    transition:all 0.4s ease;
+  }
+  .back-btn:hover {
+    background:rgba(255,215,0,0.25);
+    border-color:#ffffff;
+    color:#ffffff;
+    box-shadow:0 0 60px rgba(255,215,0,0.6);
+    transform:scale(1.1);
+    letter-spacing:0.5em;
+  }
+  .back-btn:active {
+    transform:scale(0.98);
+  }
+
+  /* ── Fade to black veil ── */
+  #credits-fade {
+    position:fixed; inset:0; background:#000;
+    z-index:400; opacity:0; pointer-events:none;
+    transition:opacity 3s ease;
+  }
+  #credits-fade.on { opacity:0.7; }
+
+  /* ── Responsive ── */
+  @media(max-width:480px){
+    .c-the-end { font-size:clamp(2.5rem,15vw,4rem); }
+    .c-row { flex-direction:column; align-items:flex-start; gap:5px; }
+    .c-name { font-size:clamp(1.2rem,8vw,1.8rem); }
+    .back-btn { padding:12px 30px; letter-spacing:0.25em; font-size:1.2rem; }
+    .c-heading { letter-spacing:0.4em; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Loading -->
+<div id="loading-screen">
+  <canvas id="smoke"></canvas>
+  <div class="load-content">
+    <div class="load-title">CS MEMORIES</div>
+    <div class="load-sub">your highlights · your story</div>
+    <div class="progress-wrap">
+      <div class="progress-track">
+        <div class="progress-bar" id="pbar"></div>
+      </div>
+      <div class="progress-meta">
+        <span>Loading</span>
+        <span class="progress-pct" id="pnum">0%</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Player -->
+<div id="player-screen">
+  <video id="main-video" playsinline webkit-playsinline></video>
+  <div class="hud">
+    <div class="hud-counter" id="counter">01 / 04</div>
+    <div class="hud-dots" id="dots"></div>
+  </div>
+</div>
+
+<!-- Overlays -->
+<div id="black-screen"></div>
+<div id="credits-fade"></div>
+
+<!-- Back Button -->
+<div id="back-button-container">
+  <button class="back-btn" id="back-to-index">🏠 BACK TO HOME 🏠</button>
+</div>
+
+<!-- Credits BGM -->
+<audio id="creditsBgm" src="https://res.cloudinary.com/deatzzrsw/video/upload/v1773795503/the_end_zar0um.mp3" loop preload="auto"></audio>
+
+<!-- Credits screen -->
+<div id="credits-screen">
+  <div id="credits-reel">
+
+    <!-- THE END - empty for typewriter -->
+    <div class="c-the-end" id="cTheEnd"></div>
+    <div class="c-div gold"></div>
+
+    <!-- FILM CREDITS - empty for typewriter -->
+    <div class="c-heading" id="h1"></div>
+    <div class="c-grid">
+      <div class="c-row">
+        <span class="c-role" id="r1"></span>
+        <span class="c-name n1" id="n1"></span>
+      </div>
+      <div class="c-row">
+        <span class="c-role" id="r2"></span>
+        <span class="c-name n2" id="n2"></span>
+      </div>
+      <div class="c-row">
+        <span class="c-role" id="r3"></span>
+        <span class="c-name n3" id="n3"></span>
+      </div>
+      <div class="c-row">
+        <span class="c-role" id="r4"></span>
+        <span class="c-name n4" id="n4"></span>
+      </div>
+    </div>
+    <div class="c-div"></div>
+
+    <!-- THANK YOU - empty for typewriter -->
+    <div class="c-heading" id="h2"></div>
+    <div class="c-body" id="ty"></div>
+    <div class="c-div"></div>
+
+    <!-- SPECIAL THANKS - empty for typewriter -->
+    <div class="c-heading" id="h3"></div>
+    <div class="c-special-box" id="st"></div>
+    <div class="c-div"></div>
+
+    <!-- FINAL MESSAGE - empty for typewriter -->
+    <div class="c-heading" id="h4"></div>
+    <div class="c-final" id="fm"></div>
+    <div class="c-div"></div>
+
+    <!-- MEMORABLE QUOTE - empty for typewriter -->
+    <div class="c-heading" id="h5"></div>
+    <div class="c-quote" id="mq"></div>
+
+  </div>
+</div>
+
+<script>
+/* ════════════════════════════════════════
+   VIDEO URLS — replace with your video URLs
+════════════════════════════════════════ */
+const VIDEO_URLS = [
+  "https://res.cloudinary.com/deatzzrsw/video/upload/v1773795753/saro1_asufyu.mp4",
+  "https://res.cloudinary.com/deatzzrsw/video/upload/v1773795721/saro2_xkwbs9.mp4",
+  "https://res.cloudinary.com/deatzzrsw/video/upload/v1773795717/saro3_rjc25a.mp4",
+  "https://res.cloudinary.com/deatzzrsw/video/upload/v1773795622/saro4_wdep95.mp4"
+];
+
+/* ════════════════════════════════════════
+   SMOKE PARTICLES
+════════════════════════════════════════ */
+const canvas = document.getElementById('smoke');
+const ctx    = canvas.getContext('2d');
+function resize(){ canvas.width=window.innerWidth; canvas.height=window.innerHeight; }
+resize();
+window.addEventListener('resize', resize);
+
+class Puff {
+  constructor(init){ this.spawn(init); }
+  spawn(init){
+    this.x  = Math.random()*canvas.width;
+    this.y  = init ? Math.random()*canvas.height : canvas.height+30;
+    this.r  = 90+Math.random()*140;
+    this.a  = 0;
+    this.ta = 0.016+Math.random()*0.030;
+    this.vx = (Math.random()-0.5)*0.14;
+    this.vy = -(0.08+Math.random()*0.18);
+    this.age= 0;
+    this.max= 280+Math.random()*200;
+  }
+  tick(){
+    this.age++;
+    this.x+=this.vx; this.y+=this.vy;
+    const t=this.age/this.max;
+    this.a = t<0.2?(t/0.2)*this.ta:t>0.75?((1-t)/0.25)*this.ta:this.ta;
+    if(this.age>=this.max) this.spawn(false);
+  }
+  draw(){
+    const g=ctx.createRadialGradient(this.x,this.y,0,this.x,this.y,this.r);
+    g.addColorStop(0,`rgba(180,170,150,${this.a})`);
+    g.addColorStop(1,`rgba(160,158,152,0)`);
+    ctx.fillStyle=g; ctx.beginPath();
+    ctx.arc(this.x,this.y,this.r,0,Math.PI*2); ctx.fill();
+  }
+}
+const puffs=Array.from({length:32},(_,i)=>new Puff(true));
+(function loop(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  puffs.forEach(p=>{p.tick();p.draw();});
+  requestAnimationFrame(loop);
+})();
+
+/* ════════════════════════════════════════
+   PRELOAD + PROGRESS
+════════════════════════════════════════ */
+let loaded=0, progress=0;
+const pbar=document.getElementById('pbar');
+const pnum=document.getElementById('pnum');
+
+const preloaded=VIDEO_URLS.map(url=>{
+  const v=document.createElement('video');
+  v.src=url; v.preload='auto'; v.muted=true; v.load();
+  const mark=()=>{ loaded=Math.min(loaded+1,VIDEO_URLS.length); };
+  v.addEventListener('canplaythrough',mark,{once:true});
+  v.addEventListener('loadeddata',mark,{once:true});
+  if(v.readyState>=3) mark();
+  return v;
+});
+
+const timer=setInterval(()=>{
+  const allReady=loaded>=VIDEO_URLS.length;
+  const cap=allReady?100:85;
+  const step=progress<55?1.6:progress<80?0.7:0.25;
+  progress=Math.min(progress+step,cap);
+  if(allReady) progress=Math.min(progress+2,100);
+  pbar.style.width=progress+'%';
+  pnum.textContent=Math.floor(progress)+'%';
+  if(progress>=100){ clearInterval(timer); setTimeout(launch,500); }
+},40);
+
+/* ════════════════════════════════════════
+   LAUNCH + PLAYER
+════════════════════════════════════════ */
+let currentIdx=0;
+const mainVideo=document.getElementById('main-video');
+const loadScr  =document.getElementById('loading-screen');
+const playerScr=document.getElementById('player-screen');
+const blackScr =document.getElementById('black-screen');
+const creditScr=document.getElementById('credits-screen');
+const backBtnContainer = document.getElementById('back-button-container');
+const backBtn = document.getElementById('back-to-index');
+
+function launch(){
+  loadScr.classList.add('fade-out');
+  setTimeout(()=>{
+    loadScr.style.display='none';
+    const dotsEl=document.getElementById('dots');
+    VIDEO_URLS.forEach((_,i)=>{
+      const d=document.createElement('div');
+      d.className='dot'+(i===0?' active':'');
+      d.onclick=()=>switchTo(i);
+      dotsEl.appendChild(d);
+    });
+    playerScr.classList.add('active');
+    playVideo(0);
+  },900);
+}
+
+function playVideo(idx){
+  currentIdx=idx;
+  document.getElementById('counter').textContent=
+    String(idx+1).padStart(2,'0')+' / '+String(VIDEO_URLS.length).padStart(2,'0');
+  document.querySelectorAll('.dot').forEach((d,i)=>d.classList.toggle('active',i===idx));
+  mainVideo.src=VIDEO_URLS[idx];
+  mainVideo.load();
+  mainVideo.addEventListener('canplay',()=>{
+    mainVideo.muted=false;
+    mainVideo.play().catch(()=>{ mainVideo.muted=true; mainVideo.play(); });
+  },{once:true});
+  mainVideo.onended=()=>{
+    if(idx+1<VIDEO_URLS.length){ playVideo(idx+1); }
+    else { showCredits(); }
+  };
+}
+
+function switchTo(idx){
+  if(idx===currentIdx) return;
+  mainVideo.pause(); mainVideo.onended=null; playVideo(idx);
+}
+
+/* ── Function to redirect to index.html ── */
+function redirectToIndex() {
+  creditScr.classList.remove('active');
+  backBtnContainer.classList.remove('visible');
+  setTimeout(() => {
+    window.location.href = 'index.html';
+  }, 1000);
+}
+
+/* ════════════════════════════════════════
+   CINEMATIC CREDITS ENGINE - FIXED typewriter with BR tag support
+════════════════════════════════════════ */
+
+function typeInto(el, html, speed) {
+  return new Promise(resolve => {
+    el.innerHTML = '';
+    
+    // FIXED: Parse HTML string to handle <br> tags properly
+    const parts = html.split(/(<br>|<br\/>)/g);
+    let queue = [];
+    
+    for (let part of parts) {
+      if (part === '<br>' || part === '<br/>') {
+        queue.push({ type: 'br' });
+      } else {
+        // Split into characters, handling emojis properly
+        const chars = [...part];
+        for (let char of chars) {
+          queue.push({ type: 'char', char: char });
+        }
+      }
+    }
+
+    let i = 0;
+    const cur = document.createElement('span');
+    cur.className = 'tw-cursor';
+    el.appendChild(cur);
+
+    function next() {
+      if (i >= queue.length) {
+        cur.remove();
+        resolve();
+        return;
+      }
+      
+      const item = queue[i++];
+      
+      if (item.type === 'br') {
+        const br = document.createElement('br');
+        cur.insertAdjacentElement('beforebegin', br);
+        setTimeout(next, speed * 2);
+      } else {
+        const span = document.createElement('span');
+        span.textContent = item.char;
+        cur.insertAdjacentElement('beforebegin', span);
+        
+        // FIXED: Proper timing for different characters
+        let delay = speed;
+        if (item.char === ' ') delay = speed * 0.3;
+        else if (item.char === '.') delay = speed * 1.5;
+        else if (item.char === ',') delay = speed * 0.8;
+        
+        setTimeout(next, delay);
+      }
+    }
+    next();
+  });
+}
+
+const isMobile = /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent) || window.innerWidth < 768;
+let currentReelY = 0;
+
+function scrollToEl(targetEl) {
+  return new Promise(resolve => {
+    const reel    = document.getElementById('credits-reel');
+    const rect    = targetEl.getBoundingClientRect();
+    const elTop   = rect.top;
+    const target  = window.innerHeight * 0.35;
+    const delta   = elTop - target;
+    const distance= Math.abs(delta);
+    if(distance < 2){ resolve(); return; }
+
+    const SPEED = isMobile ? 1.8 : 2.8;
+    const steps = Math.ceil(distance / SPEED);
+    let step = 0;
+    const dir = delta > 0 ? 1 : -1;
+
+    (function tick(){
+      step++;
+      currentReelY += SPEED * dir;
+      reel.style.top = (window.innerHeight - currentReelY) + 'px';
+      const done = step >= steps;
+      if(!done) requestAnimationFrame(tick);
+      else resolve();
+    })();
+  });
+}
+
+async function runCredits(){
+  const SPD = isMobile ? 75 : 50; // FIXED: Slower typing speed
+
+  // THE END
+  await scrollToEl(document.getElementById('cTheEnd'));
+  await typeInto(document.getElementById('cTheEnd'), ' THE💖END ', SPD);
+  await pause(500);
+
+  // Film Credits
+  await scrollToEl(document.getElementById('h1'));
+  await typeInto(document.getElementById('h1'), '🎬 FILM CREDITS 🎬', SPD);
+  await pause(200);
+
+  await scrollToEl(document.getElementById('r1'));
+  await typeInto(document.getElementById('r1'), '✂️ EDITED BY ✂️', SPD);
+  await typeInto(document.getElementById('n1'), 'BOOBALAN 🎬', SPD);
+  await pause(150);
+
+  await scrollToEl(document.getElementById('r2'));
+  await typeInto(document.getElementById('r2'), '👑 DIRECT BY 👑', SPD);
+  await typeInto(document.getElementById('n2'), 'ADHESHWARAN 🎤', SPD);
+  await pause(150);
+
+  await scrollToEl(document.getElementById('r3'));
+  await typeInto(document.getElementById('r3'), '🎥 PRODUCED BY 🎥', SPD);
+  await typeInto(document.getElementById('n3'), 'SARAVANAN 🎞️', SPD);
+  await pause(150);
+
+  await scrollToEl(document.getElementById('r4'));
+  await typeInto(document.getElementById('r4'), '📢 PUBLISHED BY 📢', SPD);
+  await typeInto(document.getElementById('n4'), 'ALAGARASAN 🔗', SPD);
+  await pause(600);
+
+  // Thank You
+  await scrollToEl(document.getElementById('h2'));
+  await typeInto(document.getElementById('h2'), '🙏 THANK YOU 🙏', SPD);
+  await scrollToEl(document.getElementById('ty'));
+  await typeInto(document.getElementById('ty'),
+    'Thank you for watching this video 💫<br>This was not just a video, but a collection of memories 📸<br>moments that will stay in our hearts forever 💝',
+    SPD);
+  await pause(600);
+
+  // Special Thanks - FIXED with proper BR tags
+  await scrollToEl(document.getElementById('h3'));
+  await typeInto(document.getElementById('h3'), '✨ SPECIAL THANKS ✨', SPD);
+  await scrollToEl(document.getElementById('st'));
+  await typeInto(document.getElementById('st'),
+    'A heartfelt thanks once again to 🤗<br>' +
+    'Boobalan for editing this beautiful memory 🎬❤️<br>' +
+    'Adheshwaran for directing it with passion 👑✨,and <br>' +
+    'Saravanan for producing and supporting this vision 🎥💫<br>' +
+    '🙌💖',
+    SPD);
+  await pause(600);
+
+  // Final Message
+  await scrollToEl(document.getElementById('h4'));
+  await typeInto(document.getElementById('h4'), '💌 FINAL MESSAGE 💌', SPD);
+  await scrollToEl(document.getElementById('fm'));
+  await typeInto(document.getElementById('fm'),
+    'Some moments end,<br>but the memories they leave behind never fade 💫',
+    SPD);
+  await pause(600);
+
+  // Memorable Quote
+  await scrollToEl(document.getElementById('h5'));
+  await typeInto(document.getElementById('h5'), '📝 MEMORABLE QUOTE 📝', SPD);
+  await scrollToEl(document.getElementById('mq'));
+  await typeInto(document.getElementById('mq'),
+    '💭 "Time may move forward and change many things,<br>but the heart will always remember the moments it once loved." 💕',
+    SPD);
+  
+  await pause(1500);
+  backBtnContainer.classList.add('visible');
+  document.getElementById('credits-fade').classList.add('on');
+}
+
+function pause(ms){ return new Promise(r=>setTimeout(r,ms)); }
+
+function showCredits(){
+  playerScr.classList.remove('active');
+  blackScr.classList.add('active');
+
+  setTimeout(()=>{
+    blackScr.classList.remove('active');
+    creditScr.classList.add('active');
+
+    const bgm = document.getElementById('creditsBgm');
+    bgm.volume = 0.6;
+    bgm.play().catch(()=>{});
+
+    setTimeout(runCredits, 250);
+  }, 100);
+}
+
+backBtn.addEventListener('click', redirectToIndex);
+</script>
+</body>
+</html>
