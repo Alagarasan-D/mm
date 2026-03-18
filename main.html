@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -70,6 +69,35 @@
   }
   .progress-pct { color:#111; }
 
+  /* ── UNMUTE OVERLAY (mobile fix) ── */
+  #unmute-overlay {
+    position:fixed; inset:0; background:rgba(0,0,0,0.88);
+    z-index:300; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; gap:22px;
+    opacity:0; pointer-events:none;
+    transition:opacity 0.5s ease;
+  }
+  #unmute-overlay.show { opacity:1; pointer-events:all; }
+  .unmute-icon { font-size:clamp(3rem,10vw,5rem); animation:pulse 1.5s ease-in-out infinite; }
+  @keyframes pulse { 0%,100%{transform:scale(1);} 50%{transform:scale(1.15);} }
+  .unmute-text {
+    font-family:'Bebas Neue',sans-serif;
+    font-size:clamp(1.4rem,4vw,2.2rem);
+    letter-spacing:0.3em; color:#fff;
+    text-align:center; padding:0 20px;
+  }
+  .unmute-btn {
+    padding:14px 44px;
+    background:linear-gradient(135deg,rgba(255,215,0,0.2),rgba(255,165,0,0.1));
+    border:2px solid #ffd700; border-radius:50px;
+    font-family:'Bebas Neue',sans-serif;
+    font-size:clamp(1.1rem,3vw,1.6rem);
+    letter-spacing:0.4em; color:#ffd700;
+    cursor:pointer; box-shadow:0 0 30px rgba(255,215,0,0.4);
+    transition:all 0.3s ease; touch-action:manipulation;
+  }
+  .unmute-btn:hover { background:rgba(255,215,0,0.25); transform:scale(1.05); }
+
   /* ── PLAYER ── */
   #player-screen {
     position:fixed; inset:0; background:#000;
@@ -86,7 +114,8 @@
     opacity:0; transition:opacity 0.4s; pointer-events:none;
   }
   #player-screen:hover .hud,
-  #player-screen:focus .hud { opacity:1; pointer-events:all; }
+  #player-screen:focus .hud,
+  #player-screen.hud-visible .hud { opacity:1; pointer-events:all; }
 
   .hud-counter {
     position:absolute; top:22px; right:26px;
@@ -100,10 +129,14 @@
     display:flex; gap:14px; align-items:center;
   }
 
+  .dot {
+    width:6px; height:6px; border-radius:50%;
+    background:rgba(255,255,255,0.3);
+    cursor:pointer; transition:all 0.3s;
+  }
+  .dot.active { background:#fff; transform:scale(1.4); }
 
-  /* ══════════════════════════════════════
-     BLACK SCREEN
-  ══════════════════════════════════════ */
+  /* ── BLACK SCREEN ── */
   #black-screen {
     position:fixed; inset:0; background:#000;
     z-index:150; opacity:0; pointer-events:none;
@@ -111,9 +144,7 @@
   }
   #black-screen.active { opacity:1; pointer-events:all; }
 
-  /* ══════════════════════════════════════
-     CREDITS SCREEN
-  ══════════════════════════════════════ */
+  /* ── CREDITS SCREEN ── */
   #credits-screen {
     position:fixed; inset:0; background:#000;
     z-index:200; opacity:0; pointer-events:none;
@@ -163,7 +194,7 @@
   }
   @keyframes twBlink { 50%{opacity:0;} }
 
-  /* ── THE END — adjusted size ── */
+  /* ── THE END ── */
   .c-the-end {
     font-family:'Bebas Neue',sans-serif;
     font-size:clamp(3.5rem,12vw,7rem);
@@ -243,20 +274,20 @@
     transform:scale(1.05);
     filter:brightness(1.2);
   }
-  
-  .c-name.n1 { 
+
+  .c-name.n1 {
     color:#ffd700;
     text-shadow:0 0 30px rgba(255,215,0,0.8), 0 0 60px rgba(255,215,0,0.4);
   }
-  .c-name.n2 { 
+  .c-name.n2 {
     color:#00ffff;
     text-shadow:0 0 30px rgba(0,255,255,0.8), 0 0 60px rgba(0,255,255,0.4);
   }
-  .c-name.n3 { 
+  .c-name.n3 {
     color:#ff69b4;
     text-shadow:0 0 30px rgba(255,105,180,0.8), 0 0 60px rgba(255,105,180,0.4);
   }
-  .c-name.n4 { 
+  .c-name.n4 {
     color:#7fffd4;
     text-shadow:0 0 30px rgba(127,255,212,0.8), 0 0 60px rgba(127,255,212,0.4);
   }
@@ -293,7 +324,7 @@
     box-shadow:0 0 30px rgba(255,215,0,0.2);
     backdrop-filter:blur(2px);
   }
-  .c-special-box strong { 
+  .c-special-box strong {
     color:#ffd700;
     text-shadow:0 0 20px rgba(255,215,0,0.6);
     font-weight:bold;
@@ -370,9 +401,56 @@
     transform:scale(1.1);
     letter-spacing:0.5em;
   }
-  .back-btn:active {
-    transform:scale(0.98);
+  .back-btn:active { transform:scale(0.98); }
+
+  /* ── DESIGNER BADGE — bottom left ── */
+  #designer-badge {
+    position:fixed; bottom:40px; left:clamp(12px,4vw,32px);
+    z-index:500; opacity:0; pointer-events:none;
+    transition:opacity 1.2s ease;
   }
+  #designer-badge.visible { opacity:1; pointer-events:all; }
+  .designer-link {
+    display:flex; align-items:center; gap:8px;
+    text-decoration:none; padding:8px 16px;
+    background:rgba(255,255,255,0.04);
+    border:1px solid rgba(255,215,0,0.25); border-radius:40px;
+    backdrop-filter:blur(8px); transition:all 0.4s ease;
+    cursor:pointer; overflow:hidden; position:relative;
+  }
+  .designer-link::before {
+    content:''; position:absolute; inset:0;
+    background:linear-gradient(90deg,transparent,rgba(255,215,0,0.12),transparent);
+    transform:translateX(-100%); transition:transform 0.6s ease;
+  }
+  .designer-link:hover::before { transform:translateX(100%); }
+  .designer-link:hover {
+    border-color:rgba(255,215,0,0.7);
+    box-shadow:0 0 24px rgba(255,215,0,0.35); transform:translateY(-2px);
+  }
+  .designer-dot {
+    width:6px; height:6px; border-radius:50%;
+    background:#ffd700; box-shadow:0 0 8px #ffd700; flex-shrink:0;
+    animation:dpulse 2s ease-in-out infinite;
+  }
+  @keyframes dpulse {
+    0%,100%{box-shadow:0 0 4px #ffd700;}
+    50%{box-shadow:0 0 14px #ffd700,0 0 28px rgba(255,215,0,0.4);}
+  }
+  .designer-label {
+    font-family:'Space Mono',monospace;
+    font-size:clamp(0.45rem,1vw,0.6rem);
+    letter-spacing:0.3em; color:rgba(255,255,255,0.4); text-transform:uppercase;
+  }
+  .designer-name {
+    font-family:'Bebas Neue',sans-serif;
+    font-size:clamp(0.85rem,2vw,1.1rem); letter-spacing:0.25em;
+    background:linear-gradient(135deg,#ffd700,#ffee88,#ffd700);
+    background-size:200%; background-clip:text; -webkit-background-clip:text;
+    color:transparent; -webkit-text-fill-color:transparent;
+    animation:goldShine 3s linear infinite;
+  }
+  @keyframes goldShine { 0%{background-position:0%} 100%{background-position:200%} }
 
   /* ── Fade to black veil ── */
   #credits-fade {
@@ -389,6 +467,7 @@
     .c-name { font-size:clamp(1.2rem,8vw,1.8rem); }
     .back-btn { padding:12px 30px; letter-spacing:0.25em; font-size:1.2rem; }
     .c-heading { letter-spacing:0.4em; }
+    #designer-badge { bottom:100px; }
   }
 </style>
 </head>
@@ -412,6 +491,13 @@
   </div>
 </div>
 
+<!-- Unmute overlay (mobile) -->
+<div id="unmute-overlay">
+  <div class="unmute-icon">🔇</div>
+  <div class="unmute-text">TAP TO PLAY WITH SOUND</div>
+  <button class="unmute-btn" id="unmute-btn">▶ TAP TO START</button>
+</div>
+
 <!-- Player -->
 <div id="player-screen">
   <video id="main-video" playsinline webkit-playsinline></video>
@@ -430,6 +516,15 @@
   <button class="back-btn" id="back-to-index">🏠 BACK TO HOME 🏠</button>
 </div>
 
+<!-- Designer badge -->
+<div id="designer-badge">
+  <a class="designer-link" href="https://chat.deepseek.com/a/chat/s/30c9b097-43d9-40a7-bb84-a9c9efc108ec" target="_blank" rel="noopener">
+    <div class="designer-dot"></div>
+    <span class="designer-label">DESIGNED BY</span>
+    <span class="designer-name">ARD INFO TECH</span>
+  </a>
+</div>
+
 <!-- Credits BGM -->
 <audio id="creditsBgm" src="https://res.cloudinary.com/deatzzrsw/video/upload/v1773795503/the_end_zar0um.mp3" loop preload="auto"></audio>
 
@@ -437,11 +532,9 @@
 <div id="credits-screen">
   <div id="credits-reel">
 
-    <!-- THE END - empty for typewriter -->
     <div class="c-the-end" id="cTheEnd"></div>
     <div class="c-div gold"></div>
 
-    <!-- FILM CREDITS - empty for typewriter -->
     <div class="c-heading" id="h1"></div>
     <div class="c-grid">
       <div class="c-row">
@@ -463,38 +556,83 @@
     </div>
     <div class="c-div"></div>
 
-    <!-- THANK YOU - empty for typewriter -->
     <div class="c-heading" id="h2"></div>
     <div class="c-body" id="ty"></div>
     <div class="c-div"></div>
 
-    <!-- SPECIAL THANKS - empty for typewriter -->
     <div class="c-heading" id="h3"></div>
     <div class="c-special-box" id="st"></div>
     <div class="c-div"></div>
 
-    <!-- FINAL MESSAGE - empty for typewriter -->
     <div class="c-heading" id="h4"></div>
     <div class="c-final" id="fm"></div>
     <div class="c-div"></div>
 
-    <!-- MEMORABLE QUOTE - empty for typewriter -->
     <div class="c-heading" id="h5"></div>
     <div class="c-quote" id="mq"></div>
 
+    <div style="height:160px;"></div>
   </div>
 </div>
 
 <script>
 /* ════════════════════════════════════════
-   VIDEO URLS — replace with your video URLs
+   VIDEO URLS
 ════════════════════════════════════════ */
-const VIDEO_URLS = [
+ const VIDEO_URLS = [
   "https://res.cloudinary.com/deatzzrsw/video/upload/v1773795753/saro1_asufyu.mp4",
   "https://res.cloudinary.com/deatzzrsw/video/upload/v1773795721/saro2_xkwbs9.mp4",
   "https://res.cloudinary.com/deatzzrsw/video/upload/v1773795717/saro3_rjc25a.mp4",
   "https://res.cloudinary.com/deatzzrsw/video/upload/v1773795622/saro4_wdep95.mp4"
 ];
+
+/* ════════════════════════════════════════
+   MOBILE DETECT
+════════════════════════════════════════ */
+const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) || window.innerWidth < 768;
+let userInteracted = false;
+
+/* ════════════════════════════════════════
+   WAKE LOCK — screen never turns off
+════════════════════════════════════════ */
+let wakeLock = null;
+async function grabWakeLock() {
+  if (!('wakeLock' in navigator)) return;
+  try {
+    if (wakeLock && !wakeLock.released) return;
+    wakeLock = await navigator.wakeLock.request('screen');
+    wakeLock.addEventListener('release', () => setTimeout(grabWakeLock, 800));
+  } catch(e) {}
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') grabWakeLock();
+});
+setInterval(grabWakeLock, 20000);
+
+/* ════════════════════════════════════════
+   FULLSCREEN — stays fullscreen always
+════════════════════════════════════════ */
+function goFullscreen() {
+  const el = document.documentElement;
+  const req = el.requestFullscreen || el.webkitRequestFullscreen
+            || el.mozRequestFullScreen || el.msRequestFullscreen;
+  if (req) req.call(el).catch(() => {});
+}
+document.addEventListener('fullscreenchange', () => {
+  if (!document.fullscreenElement && userInteracted) setTimeout(goFullscreen, 600);
+});
+document.addEventListener('webkitfullscreenchange', () => {
+  if (!document.webkitFullscreenElement && userInteracted) setTimeout(goFullscreen, 600);
+});
+document.addEventListener('mozfullscreenchange', () => {
+  if (!document.mozFullScreenElement && userInteracted) setTimeout(goFullscreen, 600);
+});
+function onFirstInteraction() {
+  if (userInteracted) return;
+  userInteracted = true;
+  goFullscreen();
+  grabWakeLock();
+}
 
 /* ════════════════════════════════════════
    SMOKE PARTICLES
@@ -547,14 +685,13 @@ let loaded=0, progress=0;
 const pbar=document.getElementById('pbar');
 const pnum=document.getElementById('pnum');
 
-const preloaded=VIDEO_URLS.map(url=>{
+VIDEO_URLS.forEach(url=>{
   const v=document.createElement('video');
   v.src=url; v.preload='auto'; v.muted=true; v.load();
   const mark=()=>{ loaded=Math.min(loaded+1,VIDEO_URLS.length); };
   v.addEventListener('canplaythrough',mark,{once:true});
   v.addEventListener('loadeddata',mark,{once:true});
   if(v.readyState>=3) mark();
-  return v;
 });
 
 const timer=setInterval(()=>{
@@ -572,13 +709,24 @@ const timer=setInterval(()=>{
    LAUNCH + PLAYER
 ════════════════════════════════════════ */
 let currentIdx=0;
-const mainVideo=document.getElementById('main-video');
-const loadScr  =document.getElementById('loading-screen');
-const playerScr=document.getElementById('player-screen');
-const blackScr =document.getElementById('black-screen');
-const creditScr=document.getElementById('credits-screen');
+const mainVideo        = document.getElementById('main-video');
+const loadScr          = document.getElementById('loading-screen');
+const playerScr        = document.getElementById('player-screen');
+const blackScr         = document.getElementById('black-screen');
+const creditScr        = document.getElementById('credits-screen');
 const backBtnContainer = document.getElementById('back-button-container');
-const backBtn = document.getElementById('back-to-index');
+const designerBadge    = document.getElementById('designer-badge');
+const backBtn          = document.getElementById('back-to-index');
+const unmuteOverlay    = document.getElementById('unmute-overlay');
+const unmuteBtn        = document.getElementById('unmute-btn');
+
+/* HUD touch show/hide */
+let hudTimer = null;
+playerScr.addEventListener('touchstart', () => {
+  playerScr.classList.add('hud-visible');
+  clearTimeout(hudTimer);
+  hudTimer = setTimeout(() => playerScr.classList.remove('hud-visible'), 3000);
+}, {passive:true});
 
 function launch(){
   loadScr.classList.add('fade-out');
@@ -592,8 +740,20 @@ function launch(){
       dotsEl.appendChild(d);
     });
     playerScr.classList.add('active');
-    playVideo(0);
-  },900);
+
+    if (isMobile) {
+      unmuteOverlay.classList.add('show');
+      unmuteBtn.addEventListener('click', () => {
+        onFirstInteraction();
+        unmuteOverlay.classList.remove('show');
+        setTimeout(() => unmuteOverlay.style.display='none', 600);
+        playVideo(0);
+      }, {once:true});
+    } else {
+      onFirstInteraction();
+      playVideo(0);
+    }
+  }, 900);
 }
 
 function playVideo(idx){
@@ -618,36 +778,31 @@ function switchTo(idx){
   mainVideo.pause(); mainVideo.onended=null; playVideo(idx);
 }
 
-/* ── Function to redirect to index.html ── */
 function redirectToIndex() {
   creditScr.classList.remove('active');
   backBtnContainer.classList.remove('visible');
-  setTimeout(() => {
-    window.location.href = 'index.html';
-  }, 1000);
+  designerBadge.classList.remove('visible');
+  setTimeout(() => { window.location.href = 'index.html'; }, 1000);
 }
 
 /* ════════════════════════════════════════
-   CINEMATIC CREDITS ENGINE - FIXED typewriter with BR tag support
+   TYPEWRITER ENGINE
 ════════════════════════════════════════ */
-
 function typeInto(el, html, speed) {
   return new Promise(resolve => {
     el.innerHTML = '';
-    
-    // FIXED: Parse HTML string to handle <br> tags properly
-    const parts = html.split(/(<br>|<br\/>)/g);
+    const parts = html.split(/(<br>|<br\/>|<strong>|<\/strong>)/g);
     let queue = [];
-    
+    let inStrong = false;
+
     for (let part of parts) {
+      if (part === '<strong>') { inStrong = true; continue; }
+      if (part === '</strong>') { inStrong = false; continue; }
       if (part === '<br>' || part === '<br/>') {
         queue.push({ type: 'br' });
       } else {
-        // Split into characters, handling emojis properly
         const chars = [...part];
-        for (let char of chars) {
-          queue.push({ type: 'char', char: char });
-        }
+        for (let char of chars) queue.push({ type: 'char', char, bold:inStrong });
       }
     }
 
@@ -657,29 +812,20 @@ function typeInto(el, html, speed) {
     el.appendChild(cur);
 
     function next() {
-      if (i >= queue.length) {
-        cur.remove();
-        resolve();
-        return;
-      }
-      
+      if (i >= queue.length) { cur.remove(); resolve(); return; }
       const item = queue[i++];
-      
       if (item.type === 'br') {
         const br = document.createElement('br');
         cur.insertAdjacentElement('beforebegin', br);
         setTimeout(next, speed * 2);
       } else {
-        const span = document.createElement('span');
+        const span = document.createElement(item.bold ? 'strong' : 'span');
         span.textContent = item.char;
         cur.insertAdjacentElement('beforebegin', span);
-        
-        // FIXED: Proper timing for different characters
         let delay = speed;
         if (item.char === ' ') delay = speed * 0.3;
         else if (item.char === '.') delay = speed * 1.5;
         else if (item.char === ',') delay = speed * 0.8;
-        
         setTimeout(next, delay);
       }
     }
@@ -687,7 +833,7 @@ function typeInto(el, html, speed) {
   });
 }
 
-const isMobile = /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent) || window.innerWidth < 768;
+const isMob = /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent) || window.innerWidth < 768;
 let currentReelY = 0;
 
 function scrollToEl(targetEl) {
@@ -700,7 +846,7 @@ function scrollToEl(targetEl) {
     const distance= Math.abs(delta);
     if(distance < 2){ resolve(); return; }
 
-    const SPEED = isMobile ? 1.8 : 2.8;
+    const SPEED = isMob ? 1.8 : 2.8;
     const steps = Math.ceil(distance / SPEED);
     let step = 0;
     const dir = delta > 0 ? 1 : -1;
@@ -717,14 +863,12 @@ function scrollToEl(targetEl) {
 }
 
 async function runCredits(){
-  const SPD = isMobile ? 75 : 50; // FIXED: Slower typing speed
+  const SPD = isMob ? 75 : 50;
 
-  // THE END
   await scrollToEl(document.getElementById('cTheEnd'));
   await typeInto(document.getElementById('cTheEnd'), ' THE💖END ', SPD);
   await pause(500);
 
-  // Film Credits
   await scrollToEl(document.getElementById('h1'));
   await typeInto(document.getElementById('h1'), '🎬 FILM CREDITS 🎬', SPD);
   await pause(200);
@@ -749,7 +893,6 @@ async function runCredits(){
   await typeInto(document.getElementById('n4'), 'ALAGARASAN 🔗', SPD);
   await pause(600);
 
-  // Thank You
   await scrollToEl(document.getElementById('h2'));
   await typeInto(document.getElementById('h2'), '🙏 THANK YOU 🙏', SPD);
   await scrollToEl(document.getElementById('ty'));
@@ -758,20 +901,18 @@ async function runCredits(){
     SPD);
   await pause(600);
 
-  // Special Thanks - FIXED with proper BR tags
   await scrollToEl(document.getElementById('h3'));
   await typeInto(document.getElementById('h3'), '✨ SPECIAL THANKS ✨', SPD);
   await scrollToEl(document.getElementById('st'));
   await typeInto(document.getElementById('st'),
     'A heartfelt thanks once again to 🤗<br>' +
-    'Boobalan for editing this beautiful memory 🎬❤️<br>' +
-    'Adheshwaran for directing it with passion 👑✨,and <br>' +
-    'Saravanan for producing and supporting this vision 🎥💫<br>' +
+    '<strong>Boobalan</strong> for editing this beautiful memory 🎬❤️<br>' +
+    '<strong>Adheshwaran</strong> for directing it with passion 👑✨, and<br>' +
+    '<strong>Saravanan</strong> for producing and supporting this vision 🎥💫<br>' +
     '🙌💖',
     SPD);
   await pause(600);
 
-  // Final Message
   await scrollToEl(document.getElementById('h4'));
   await typeInto(document.getElementById('h4'), '💌 FINAL MESSAGE 💌', SPD);
   await scrollToEl(document.getElementById('fm'));
@@ -780,17 +921,18 @@ async function runCredits(){
     SPD);
   await pause(600);
 
-  // Memorable Quote
   await scrollToEl(document.getElementById('h5'));
   await typeInto(document.getElementById('h5'), '📝 MEMORABLE QUOTE 📝', SPD);
   await scrollToEl(document.getElementById('mq'));
   await typeInto(document.getElementById('mq'),
     '💭 "Time may move forward and change many things,<br>but the heart will always remember the moments it once loved." 💕',
     SPD);
-  
+
   await pause(1500);
-  backBtnContainer.classList.add('visible');
   document.getElementById('credits-fade').classList.add('on');
+  backBtnContainer.classList.add('visible');
+  await pause(500);
+  designerBadge.classList.add('visible');
 }
 
 function pause(ms){ return new Promise(r=>setTimeout(r,ms)); }
@@ -808,10 +950,14 @@ function showCredits(){
     bgm.play().catch(()=>{});
 
     setTimeout(runCredits, 250);
-  }, 100);
+  }, 1000);
 }
 
 backBtn.addEventListener('click', redirectToIndex);
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'f' || e.key === 'F') goFullscreen();
+});
 </script>
 </body>
 </html>
