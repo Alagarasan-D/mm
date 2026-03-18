@@ -2,21 +2,24 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>CS MEMORIES</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono&display=swap');
 
-  * { margin:0; padding:0; box-sizing:border-box; }
+  *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
 
-  body {
+  html, body {
+    width:100%; height:100%;
+    overflow:hidden;
     background:#f9f9f7;
     font-family:'Space Mono',monospace;
-    overflow:hidden;
-    height:100vh; width:100vw;
+    touch-action:manipulation;
   }
 
-  /* ── LOADING SCREEN ── */
+  /* ══════════════════════════════
+     LOADING SCREEN
+  ══════════════════════════════ */
   #loading-screen {
     position:fixed; inset:0;
     display:flex; flex-direction:column;
@@ -28,77 +31,89 @@
 
   canvas#smoke {
     position:absolute; inset:0;
-    width:100%; height:100%;
-    pointer-events:none;
+    width:100%; height:100%; pointer-events:none;
   }
 
   .load-content {
     position:relative; z-index:10;
     display:flex; flex-direction:column; align-items:center;
+    padding:0 20px; width:100%;
   }
 
   .load-title {
     font-family:'Bebas Neue',sans-serif;
-    font-size:clamp(56px,13vw,140px);
+    font-size:clamp(48px,13vw,140px);
     letter-spacing:0.2em; color:#111;
     line-height:1; text-align:center; user-select:none;
   }
 
   .load-sub {
-    font-size:8px; letter-spacing:0.6em;
+    font-size:clamp(7px,2vw,10px); letter-spacing:0.5em;
     color:#bbb; text-transform:uppercase;
-    margin-top:8px; margin-bottom:72px;
+    margin-top:8px; margin-bottom:clamp(40px,8vh,72px);
   }
 
-  .progress-wrap { width:min(260px,68vw); }
-
-  .progress-track {
-    width:100%; height:1px;
-    background:#ddd; overflow:hidden;
-  }
-
-  .progress-bar {
-    height:100%; background:#111;
-    width:0%; transition:width 0.1s linear;
-  }
-
-  .progress-meta {
+  .progress-wrap { width:min(260px,72vw); }
+  .progress-track { width:100%; height:1px; background:#ddd; overflow:hidden; }
+  .progress-bar   { height:100%; background:#111; width:0%; transition:width 0.1s linear; }
+  .progress-meta  {
     display:flex; justify-content:space-between;
     margin-top:10px; font-size:8px;
     letter-spacing:0.25em; color:#ccc; text-transform:uppercase;
   }
   .progress-pct { color:#111; }
 
-  /* ── UNMUTE OVERLAY (mobile fix) ── */
+  /* ══════════════════════════════
+     UNMUTE OVERLAY
+  ══════════════════════════════ */
   #unmute-overlay {
-    position:fixed; inset:0; background:rgba(0,0,0,0.88);
+    position:fixed; inset:0; background:rgba(0,0,0,0.92);
     z-index:300; display:flex; flex-direction:column;
-    align-items:center; justify-content:center; gap:22px;
+    align-items:center; justify-content:center; gap:clamp(14px,4vw,24px);
     opacity:0; pointer-events:none;
     transition:opacity 0.5s ease;
+    padding:20px;
   }
   #unmute-overlay.show { opacity:1; pointer-events:all; }
-  .unmute-icon { font-size:clamp(3rem,10vw,5rem); animation:pulse 1.5s ease-in-out infinite; }
+
+  .unmute-icon {
+    font-size:clamp(2.5rem,12vw,5rem);
+    animation:pulse 1.5s ease-in-out infinite;
+  }
   @keyframes pulse { 0%,100%{transform:scale(1);} 50%{transform:scale(1.15);} }
+
   .unmute-text {
     font-family:'Bebas Neue',sans-serif;
-    font-size:clamp(1.4rem,4vw,2.2rem);
+    font-size:clamp(1.1rem,5vw,2.2rem);
     letter-spacing:0.3em; color:#fff;
-    text-align:center; padding:0 20px;
+    text-align:center;
   }
-  .unmute-btn {
-    padding:14px 44px;
-    background:linear-gradient(135deg,rgba(255,215,0,0.2),rgba(255,165,0,0.1));
-    border:2px solid #ffd700; border-radius:50px;
-    font-family:'Bebas Neue',sans-serif;
-    font-size:clamp(1.1rem,3vw,1.6rem);
-    letter-spacing:0.4em; color:#ffd700;
-    cursor:pointer; box-shadow:0 0 30px rgba(255,215,0,0.4);
-    transition:all 0.3s ease; touch-action:manipulation;
-  }
-  .unmute-btn:hover { background:rgba(255,215,0,0.25); transform:scale(1.05); }
 
-  /* ── PLAYER ── */
+.unmute-btn {
+  padding:clamp(10px,3vw,14px) clamp(28px,8vw,44px);
+  background:linear-gradient(135deg,rgba(255,215,0,0.2),rgba(255,165,0,0.1));
+  border:2px solid #ffd700;
+  border-radius:50px;
+
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(1rem,4vw,1.6rem);
+  letter-spacing:0.4em;
+  color:#ffd700;
+
+  cursor:pointer;
+  box-shadow:0 0 30px rgba(255,215,0,0.4);
+  transition:all 0.3s ease;
+
+  touch-action:manipulation;
+
+  appearance:none;          /* standard */
+  -webkit-appearance:none;  /* safari/chrome */
+}
+  .unmute-btn:active { transform:scale(0.96); }
+
+  /* ══════════════════════════════
+     PLAYER
+  ══════════════════════════════ */
   #player-screen {
     position:fixed; inset:0; background:#000;
     display:flex; align-items:center; justify-content:center;
@@ -107,36 +122,29 @@
   }
   #player-screen.active { opacity:1; pointer-events:all; }
 
-  #main-video { width:100%; height:100%; object-fit:contain; }
+  #main-video {
+    width:100%; height:100%;
+    object-fit:contain;
+    display:block;
+  }
 
+  /* HUD — only counter, NO dots */
   .hud {
     position:absolute; inset:0;
     opacity:0; transition:opacity 0.4s; pointer-events:none;
   }
   #player-screen:hover .hud,
-  #player-screen:focus .hud,
   #player-screen.hud-visible .hud { opacity:1; pointer-events:all; }
 
   .hud-counter {
-    position:absolute; top:22px; right:26px;
-    font-size:9px; letter-spacing:0.3em;
-    color:rgba(255,255,255,0.4);
+    position:absolute; top:clamp(12px,3vw,22px); right:clamp(14px,4vw,26px);
+    font-size:clamp(8px,2.5vw,11px); letter-spacing:0.3em;
+    color:rgba(255,255,255,0.5);
   }
 
-  .hud-dots {
-    position:absolute; bottom:26px;
-    left:50%; transform:translateX(-50%);
-    display:flex; gap:14px; align-items:center;
-  }
-
-  .dot {
-    width:6px; height:6px; border-radius:50%;
-    background:rgba(255,255,255,0.3);
-    cursor:pointer; transition:all 0.3s;
-  }
-  .dot.active { background:#fff; transform:scale(1.4); }
-
-  /* ── BLACK SCREEN ── */
+  /* ══════════════════════════════
+     BLACK SCREEN
+  ══════════════════════════════ */
   #black-screen {
     position:fixed; inset:0; background:#000;
     z-index:150; opacity:0; pointer-events:none;
@@ -144,7 +152,9 @@
   }
   #black-screen.active { opacity:1; pointer-events:all; }
 
-  /* ── CREDITS SCREEN ── */
+  /* ══════════════════════════════
+     CREDITS SCREEN
+  ══════════════════════════════ */
   #credits-screen {
     position:fixed; inset:0; background:#000;
     z-index:200; opacity:0; pointer-events:none;
@@ -153,13 +163,10 @@
   }
   #credits-screen.active { opacity:1; pointer-events:all; }
 
-  /* CRT scanlines */
-  #credits-screen::before {
-    content:''; position:fixed; inset:0;
-    z-index:1; pointer-events:none;
-    background:repeating-linear-gradient(0deg,
-      transparent,transparent 2px,
-      rgba(0,0,0,0.1) 2px,rgba(0,0,0,0.1) 4px);
+  /* CRT scanlines — using canvas instead of pseudo to work on all mobile */
+  #crt-canvas {
+    position:fixed; inset:0; z-index:1; pointer-events:none;
+    width:100%; height:100%; opacity:0.18;
   }
 
   /* Top + bottom fade masks */
@@ -167,162 +174,131 @@
     content:''; position:fixed; inset:0;
     z-index:3; pointer-events:none;
     background:
-      linear-gradient(to bottom, #000 0%, transparent 12%),
-      linear-gradient(to top,    #000 0%, transparent 12%);
+      linear-gradient(to bottom, #000 0%, transparent 10%),
+      linear-gradient(to top,    #000 0%, transparent 10%);
   }
 
-  /* The scrolling reel */
+  /* Scrolling reel */
   #credits-reel {
     position:absolute;
     left:50%; transform:translateX(-50%);
-    width:min(680px,90vw);
+    width:min(680px,94vw);
     text-align:center;
     z-index:2;
     padding-bottom:100vh;
     top:100vh;
+    padding-left:clamp(8px,3vw,20px);
+    padding-right:clamp(8px,3vw,20px);
   }
 
-  /* ── Typewriter cursor ── */
+  /* Typewriter cursor */
   .tw-cursor {
-    display:inline-block;
-    width:2px; height:0.9em;
-    background:#ffd700;
-    vertical-align:middle;
-    margin-left:2px;
+    display:inline-block; width:2px; height:0.9em;
+    background:#ffd700; vertical-align:middle; margin-left:2px;
     animation:twBlink 0.55s step-end infinite;
     box-shadow:0 0 10px #ffd700;
   }
   @keyframes twBlink { 50%{opacity:0;} }
 
-  /* ── THE END ── */
+  /* THE END */
   .c-the-end {
     font-family:'Bebas Neue',sans-serif;
-    font-size:clamp(3.5rem,12vw,7rem);
+    font-size:clamp(2.8rem,14vw,7rem);
     letter-spacing:0.2em;
     background:linear-gradient(135deg,#ffd700,#ffaa00,#ff7b00,#ff5500,#ffaa00,#ffd700);
     background-size:400%;
     background-clip:text; -webkit-background-clip:text;
     color:transparent; -webkit-text-fill-color:transparent;
-    filter:drop-shadow(0 0 40px rgba(255,215,0,0.8));
+    filter:drop-shadow(0 0 30px rgba(255,215,0,0.8));
     animation:theEndShimmer 4s linear infinite;
     line-height:1; display:block;
-    margin-bottom:52px;
-    text-shadow:0 0 30px rgba(255,200,0,0.5);
+    margin-bottom:clamp(28px,6vw,52px);
   }
   @keyframes theEndShimmer {
     0%{background-position:0% 50%} 100%{background-position:400% 50%}
   }
 
-  /* ── Divider ── */
+  /* Dividers */
   .c-div {
-    width:min(380px,78%); height:1px; margin:30px auto;
+    width:min(380px,80%); height:1px; margin:clamp(16px,4vw,30px) auto;
     background:linear-gradient(90deg,transparent,rgba(255,215,0,0.3),rgba(255,255,255,0.5),rgba(255,215,0,0.3),transparent);
   }
   .c-div.gold {
     background:linear-gradient(90deg,transparent,rgba(255,215,0,0.6),#ffd700,rgba(255,215,0,0.6),transparent);
-    height:2px;
-    box-shadow:0 0 20px rgba(255,215,0,0.4);
+    height:2px; box-shadow:0 0 20px rgba(255,215,0,0.4);
   }
 
-  /* ── Section heading ── */
+  /* Section headings */
   .c-heading {
     font-family:'Bebas Neue',sans-serif;
-    font-size:clamp(0.9rem,2.7vw,1.4rem);
-    letter-spacing:0.6em;
+    font-size:clamp(0.75rem,3.5vw,1.4rem);
+    letter-spacing:clamp(0.2em,1.5vw,0.6em);
     color:#ffffff;
     text-transform:uppercase;
-    margin-bottom:22px;
+    margin-bottom:clamp(12px,3vw,22px);
     min-height:1em;
     text-shadow:0 0 20px rgba(255,255,255,0.5), 0 0 40px rgba(255,215,0,0.3);
     opacity:0.95;
   }
 
-  /* ── Credit rows ── */
+  /* Credit rows */
   .c-grid { display:flex; flex-direction:column; gap:0; }
 
   .c-row {
     display:flex; justify-content:space-between; align-items:center;
-    padding:14px 0;
+    padding:clamp(10px,3vw,14px) 0;
     border-bottom:1px solid rgba(255,215,0,0.15);
     transition:all 0.3s ease;
-  }
-  .c-row:hover {
-    border-bottom-color:rgba(255,215,0,0.5);
-    transform:scale(1.02);
+    gap:8px;
   }
   .c-row:last-child { border-bottom:none; }
 
   .c-role {
     font-family:'Space Mono',monospace;
-    font-size:clamp(0.6rem,1.4vw,0.75rem);
-    letter-spacing:0.36em;
+    font-size:clamp(0.5rem,2.2vw,0.75rem);
+    letter-spacing:clamp(0.1em,0.8vw,0.36em);
     color:#e0e0e0;
-    text-transform:uppercase;
-    min-height:1em;
+    text-transform:uppercase; min-height:1em;
     text-shadow:0 0 15px rgba(255,255,255,0.3);
-    font-weight:300;
+    font-weight:300; flex-shrink:0;
   }
 
   .c-name {
     font-family:'Bebas Neue',sans-serif;
-    font-size:clamp(1.3rem,3.5vw,2rem);
-    letter-spacing:0.16em;
-    min-height:1em;
-    transition:all 0.3s ease;
+    font-size:clamp(1.1rem,5.5vw,2rem);
+    letter-spacing:clamp(0.05em,0.5vw,0.16em);
+    min-height:1em; text-align:right;
   }
-  .c-name:hover {
-    transform:scale(1.05);
-    filter:brightness(1.2);
-  }
+  .c-name.n1 { color:#ffd700; text-shadow:0 0 30px rgba(255,215,0,0.8),0 0 60px rgba(255,215,0,0.4); }
+  .c-name.n2 { color:#00ffff; text-shadow:0 0 30px rgba(0,255,255,0.8),0 0 60px rgba(0,255,255,0.4); }
+  .c-name.n3 { color:#ff69b4; text-shadow:0 0 30px rgba(255,105,180,0.8),0 0 60px rgba(255,105,180,0.4); }
+  .c-name.n4 { color:#7fffd4; text-shadow:0 0 30px rgba(127,255,212,0.8),0 0 60px rgba(127,255,212,0.4); }
 
-  .c-name.n1 {
-    color:#ffd700;
-    text-shadow:0 0 30px rgba(255,215,0,0.8), 0 0 60px rgba(255,215,0,0.4);
-  }
-  .c-name.n2 {
-    color:#00ffff;
-    text-shadow:0 0 30px rgba(0,255,255,0.8), 0 0 60px rgba(0,255,255,0.4);
-  }
-  .c-name.n3 {
-    color:#ff69b4;
-    text-shadow:0 0 30px rgba(255,105,180,0.8), 0 0 60px rgba(255,105,180,0.4);
-  }
-  .c-name.n4 {
-    color:#7fffd4;
-    text-shadow:0 0 30px rgba(127,255,212,0.8), 0 0 60px rgba(127,255,212,0.4);
-  }
-
-  /* ── Body text ── */
+  /* Body text */
   .c-body {
     font-family:'Space Mono',monospace;
-    font-size:clamp(0.7rem,1.8vw,0.9rem);
-    line-height:2.4;
-    color:#ffffff;
-    font-style:italic;
-    min-height:1em;
-    text-shadow:0 0 15px rgba(255,255,255,0.4);
-    background:linear-gradient(135deg, #ffffff, #f0f0f0);
-    background-clip:text;
-    -webkit-background-clip:text;
+    font-size:clamp(0.6rem,2.8vw,0.9rem);
+    line-height:2.2; color:#ffffff;
+    font-style:italic; min-height:1em;
+    background:linear-gradient(135deg,#ffffff,#f0f0f0);
+    background-clip:text; -webkit-background-clip:text;
     -webkit-text-fill-color:transparent;
     font-weight:500;
   }
 
-  /* ── Special thanks box ── */
+  /* Special thanks box */
   .c-special-box {
     background:rgba(255,215,0,0.08);
     border:1px solid rgba(255,215,0,0.3);
     border-left:4px solid #ffd700;
     border-radius:8px;
-    padding:clamp(16px,3.5vw,26px) clamp(16px,3.5vw,28px);
+    padding:clamp(12px,3.5vw,26px) clamp(12px,3.5vw,28px);
     text-align:left;
     font-family:'Space Mono',monospace;
-    font-size:clamp(0.65rem,1.6vw,0.85rem);
-    line-height:2.5;
-    color:#f0f0f0;
+    font-size:clamp(0.55rem,2.5vw,0.85rem);
+    line-height:2.3; color:#f0f0f0;
     min-height:1em;
     box-shadow:0 0 30px rgba(255,215,0,0.2);
-    backdrop-filter:blur(2px);
   }
   .c-special-box strong {
     color:#ffd700;
@@ -330,145 +306,139 @@
     font-weight:bold;
   }
 
-  /* ── Final message ── */
+  /* Final message */
   .c-final {
     font-family:'Bebas Neue',sans-serif;
-    font-size:clamp(1.2rem,3.5vw,2.2rem);
-    letter-spacing:0.2em;
-    color:#ffffff;
-    line-height:1.8;
-    min-height:1em;
-    text-shadow:0 0 25px rgba(255,255,255,0.6), 0 0 50px rgba(255,215,0,0.3);
-    background:linear-gradient(135deg, #ffffff, #fff5e6);
-    background-clip:text;
-    -webkit-background-clip:text;
+    font-size:clamp(1rem,5vw,2.2rem);
+    letter-spacing:clamp(0.08em,0.8vw,0.2em);
+    color:#ffffff; line-height:1.8; min-height:1em;
+    background:linear-gradient(135deg,#ffffff,#fff5e6);
+    background-clip:text; -webkit-background-clip:text;
     -webkit-text-fill-color:transparent;
   }
 
-  /* ── Memorable quote ── */
+  /* Memorable quote */
   .c-quote {
     font-family:'Space Mono',monospace;
-    font-size:clamp(0.7rem,1.8vw,0.9rem);
-    font-style:italic;
-    color:#f5f5f5;
-    line-height:2.3;
-    padding:28px 0;
+    font-size:clamp(0.6rem,2.5vw,0.9rem);
+    font-style:italic; color:#f5f5f5;
+    line-height:2.2;
+    padding:clamp(16px,4vw,28px) 0;
     border-top:1px solid rgba(255,215,0,0.3);
     border-bottom:1px solid rgba(255,215,0,0.3);
     min-height:1em;
     text-shadow:0 0 20px rgba(255,255,255,0.3);
-    letter-spacing:0.05em;
+    letter-spacing:0.03em;
   }
 
-  /* ── BACK BUTTON ── */
+  /* ══════════════════════════════
+     BACK BUTTON — only shows after credits end
+  ══════════════════════════════ */
   #back-button-container {
     position:fixed;
-    bottom:40px;
-    left:50%;
-    transform:translateX(-50%);
+    bottom:clamp(70px,12vw,100px);
+    left:50%; transform:translateX(-50%);
     z-index:500;
-    opacity:0;
-    pointer-events:none;
+    opacity:0; pointer-events:none;
     transition:opacity 1s ease;
     text-align:center;
+    width:90%;
   }
-  #back-button-container.visible {
-    opacity:1;
-    pointer-events:all;
-  }
-  .back-btn {
-    display:inline-block;
-    padding:16px 48px;
-    background:linear-gradient(135deg, rgba(255,215,0,0.15), rgba(255,255,255,0.05));
-    border:2px solid #ffd700;
-    border-radius:60px;
-    font-family:'Bebas Neue',sans-serif;
-    font-size:clamp(1.3rem,2.8vw,2rem);
-    letter-spacing:0.4em;
-    color:#ffd700;
-    text-decoration:none;
-    text-transform:uppercase;
-    cursor:pointer;
-    backdrop-filter:blur(10px);
-    box-shadow:0 0 40px rgba(255,215,0,0.4), 0 0 80px rgba(255,215,0,0.2);
-    transition:all 0.4s ease;
-  }
-  .back-btn:hover {
-    background:rgba(255,215,0,0.25);
-    border-color:#ffffff;
-    color:#ffffff;
-    box-shadow:0 0 60px rgba(255,215,0,0.6);
-    transform:scale(1.1);
-    letter-spacing:0.5em;
-  }
-  .back-btn:active { transform:scale(0.98); }
+  #back-button-container.visible { opacity:1; pointer-events:all; }
 
-  /* ── DESIGNER BADGE — bottom left ── */
+.back-btn {
+  display:inline-block;
+  padding:clamp(12px,3.5vw,16px) clamp(24px,7vw,48px);
+  background:linear-gradient(135deg,rgba(255,215,0,0.15),rgba(255,255,255,0.05));
+  border:2px solid #ffd700;
+  border-radius:60px;
+
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(1rem,4.5vw,2rem);
+  letter-spacing:clamp(0.15em,1vw,0.4em);
+
+  color:#ffd700;
+  text-decoration:none;
+  text-transform:uppercase;
+
+  cursor:pointer;
+  backdrop-filter:blur(10px);
+
+  box-shadow:0 0 40px rgba(255,215,0,0.4),0 0 80px rgba(255,215,0,0.2);
+  transition:all 0.4s ease;
+
+  appearance:none;
+  -webkit-appearance:none;
+
+  touch-action:manipulation;
+  white-space:nowrap;
+}
+  .back-btn:active { transform:scale(0.97); opacity:0.85; }
+
+  /* ══════════════════════════════
+     DESIGNER BADGE — fixed bottom-left
+  ══════════════════════════════ */
   #designer-badge {
-    position:fixed; bottom:40px; left:clamp(12px,4vw,32px);
-    z-index:500; opacity:0; pointer-events:none;
+    position:fixed;
+    bottom:clamp(14px,3vw,24px);
+    left:clamp(10px,3vw,24px);
+    z-index:500;
+    opacity:0; pointer-events:none;
     transition:opacity 1.2s ease;
   }
   #designer-badge.visible { opacity:1; pointer-events:all; }
+
   .designer-link {
-    display:flex; align-items:center; gap:8px;
-    text-decoration:none; padding:8px 16px;
-    background:rgba(255,255,255,0.04);
-    border:1px solid rgba(255,215,0,0.25); border-radius:40px;
-    backdrop-filter:blur(8px); transition:all 0.4s ease;
-    cursor:pointer; overflow:hidden; position:relative;
+    display:inline-flex; align-items:center; gap:clamp(5px,1.5vw,8px);
+    text-decoration:none;
+    padding:clamp(6px,2vw,9px) clamp(10px,3vw,16px);
+    background:rgba(0,0,0,0.55);
+    border:1px solid rgba(255,215,0,0.35); border-radius:40px;
+    backdrop-filter:blur(10px);
+    transition:all 0.3s ease;
+    touch-action:manipulation;
   }
-  .designer-link::before {
-    content:''; position:absolute; inset:0;
-    background:linear-gradient(90deg,transparent,rgba(255,215,0,0.12),transparent);
-    transform:translateX(-100%); transition:transform 0.6s ease;
-  }
-  .designer-link:hover::before { transform:translateX(100%); }
-  .designer-link:hover {
-    border-color:rgba(255,215,0,0.7);
-    box-shadow:0 0 24px rgba(255,215,0,0.35); transform:translateY(-2px);
-  }
+  .designer-link:active { transform:scale(0.96); }
+  .designer-link:hover  { border-color:rgba(255,215,0,0.7); background:rgba(0,0,0,0.7); }
+
   .designer-dot {
-    width:6px; height:6px; border-radius:50%;
-    background:#ffd700; box-shadow:0 0 8px #ffd700; flex-shrink:0;
+    width:clamp(5px,1.5vw,7px); height:clamp(5px,1.5vw,7px);
+    border-radius:50%; background:#ffd700;
+    box-shadow:0 0 8px #ffd700; flex-shrink:0;
     animation:dpulse 2s ease-in-out infinite;
   }
   @keyframes dpulse {
-    0%,100%{box-shadow:0 0 4px #ffd700;}
-    50%{box-shadow:0 0 14px #ffd700,0 0 28px rgba(255,215,0,0.4);}
+    0%,100%{box-shadow:0 0 4px #ffd700; transform:scale(1);}
+    50%{box-shadow:0 0 12px #ffd700,0 0 24px rgba(255,215,0,0.4); transform:scale(1.25);}
   }
+
   .designer-label {
     font-family:'Space Mono',monospace;
-    font-size:clamp(0.45rem,1vw,0.6rem);
-    letter-spacing:0.3em; color:rgba(255,255,255,0.4); text-transform:uppercase;
+    font-size:clamp(0.42rem,1.6vw,0.58rem);
+    letter-spacing:0.25em; color:rgba(255,255,255,0.45);
+    text-transform:uppercase; white-space:nowrap;
   }
+
   .designer-name {
     font-family:'Bebas Neue',sans-serif;
-    font-size:clamp(0.85rem,2vw,1.1rem); letter-spacing:0.25em;
+    font-size:clamp(0.75rem,3.2vw,1.05rem);
+    letter-spacing:0.22em;
     background:linear-gradient(135deg,#ffd700,#ffee88,#ffd700);
-    background-size:200%; background-clip:text; -webkit-background-clip:text;
+    background-size:200%;
+    background-clip:text; -webkit-background-clip:text;
     color:transparent; -webkit-text-fill-color:transparent;
     animation:goldShine 3s linear infinite;
+    white-space:nowrap;
   }
   @keyframes goldShine { 0%{background-position:0%} 100%{background-position:200%} }
 
-  /* ── Fade to black veil ── */
+  /* Fade veil */
   #credits-fade {
     position:fixed; inset:0; background:#000;
     z-index:400; opacity:0; pointer-events:none;
     transition:opacity 3s ease;
   }
   #credits-fade.on { opacity:0.7; }
-
-  /* ── Responsive ── */
-  @media(max-width:480px){
-    .c-the-end { font-size:clamp(2.5rem,15vw,4rem); }
-    .c-row { flex-direction:column; align-items:flex-start; gap:5px; }
-    .c-name { font-size:clamp(1.2rem,8vw,1.8rem); }
-    .back-btn { padding:12px 30px; letter-spacing:0.25em; font-size:1.2rem; }
-    .c-heading { letter-spacing:0.4em; }
-    #designer-badge { bottom:100px; }
-  }
 </style>
 </head>
 <body>
@@ -480,9 +450,7 @@
     <div class="load-title">CS MEMORIES</div>
     <div class="load-sub">your highlights · your story</div>
     <div class="progress-wrap">
-      <div class="progress-track">
-        <div class="progress-bar" id="pbar"></div>
-      </div>
+      <div class="progress-track"><div class="progress-bar" id="pbar"></div></div>
       <div class="progress-meta">
         <span>Loading</span>
         <span class="progress-pct" id="pnum">0%</span>
@@ -491,19 +459,18 @@
   </div>
 </div>
 
-<!-- Unmute overlay (mobile) -->
+<!-- Unmute overlay -->
 <div id="unmute-overlay">
   <div class="unmute-icon">🔇</div>
   <div class="unmute-text">TAP TO PLAY WITH SOUND</div>
   <button class="unmute-btn" id="unmute-btn">▶ TAP TO START</button>
 </div>
 
-<!-- Player -->
+<!-- Player — NO dots, only counter -->
 <div id="player-screen">
-  <video id="main-video" playsinline webkit-playsinline></video>
+  <video id="main-video" playsinline webkit-playsinline preload="auto"></video>
   <div class="hud">
     <div class="hud-counter" id="counter">01 / 04</div>
-    <div class="hud-dots" id="dots"></div>
   </div>
 </div>
 
@@ -511,14 +478,16 @@
 <div id="black-screen"></div>
 <div id="credits-fade"></div>
 
-<!-- Back Button -->
+<!-- Back Button (only after credits complete) -->
 <div id="back-button-container">
   <button class="back-btn" id="back-to-index">🏠 BACK TO HOME 🏠</button>
 </div>
 
-<!-- Designer badge -->
+<!-- Designer badge — bottom left -->
 <div id="designer-badge">
-  <a class="designer-link" href="https://chat.deepseek.com/a/chat/s/30c9b097-43d9-40a7-bb84-a9c9efc108ec" target="_blank" rel="noopener">
+  <a class="designer-link"
+     href="https://abukutty.github.io/ARD-INFO-TECH/"
+     target="_blank" rel="noopener">
     <div class="designer-dot"></div>
     <span class="designer-label">DESIGNED BY</span>
     <span class="designer-name">ARD INFO TECH</span>
@@ -526,10 +495,13 @@
 </div>
 
 <!-- Credits BGM -->
-<audio id="creditsBgm" src="https://res.cloudinary.com/deatzzrsw/video/upload/v1773795503/the_end_zar0um.mp3" loop preload="auto"></audio>
+<audio id="creditsBgm"
+  src="https://res.cloudinary.com/deatzzrsw/video/upload/v1773795503/the_end_zar0um.mp3"
+  loop preload="auto"></audio>
 
 <!-- Credits screen -->
 <div id="credits-screen">
+  <canvas id="crt-canvas"></canvas>
   <div id="credits-reel">
 
     <div class="c-the-end" id="cTheEnd"></div>
@@ -557,28 +529,28 @@
     <div class="c-div"></div>
 
     <div class="c-heading" id="h2"></div>
-    <div class="c-body" id="ty"></div>
+    <div class="c-body"    id="ty"></div>
     <div class="c-div"></div>
 
-    <div class="c-heading" id="h3"></div>
+    <div class="c-heading"     id="h3"></div>
     <div class="c-special-box" id="st"></div>
     <div class="c-div"></div>
 
     <div class="c-heading" id="h4"></div>
-    <div class="c-final" id="fm"></div>
+    <div class="c-final"   id="fm"></div>
     <div class="c-div"></div>
 
     <div class="c-heading" id="h5"></div>
-    <div class="c-quote" id="mq"></div>
+    <div class="c-quote"   id="mq"></div>
 
-    <div style="height:160px;"></div>
+    <div style="height:180px;"></div>
   </div>
 </div>
 
 <script>
-/* ════════════════════════════════════════
-   VIDEO URLS
-════════════════════════════════════════ */
+/* ══════════════════════════════════════
+   CONFIG
+══════════════════════════════════════ */
  const VIDEO_URLS = [
   "https://res.cloudinary.com/deatzzrsw/video/upload/v1773795753/saro1_asufyu.mp4",
   "https://res.cloudinary.com/deatzzrsw/video/upload/v1773795721/saro2_xkwbs9.mp4",
@@ -586,101 +558,123 @@
   "https://res.cloudinary.com/deatzzrsw/video/upload/v1773795622/saro4_wdep95.mp4"
 ];
 
-/* ════════════════════════════════════════
-   MOBILE DETECT
-════════════════════════════════════════ */
-const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) || window.innerWidth < 768;
+
+/* ══════════════════════════════════════
+   DEVICE DETECT
+══════════════════════════════════════ */
+const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)
+               || window.innerWidth < 1024;
 let userInteracted = false;
 
-/* ════════════════════════════════════════
-   WAKE LOCK — screen never turns off
-════════════════════════════════════════ */
-let wakeLock = null;
-async function grabWakeLock() {
-  if (!('wakeLock' in navigator)) return;
-  try {
-    if (wakeLock && !wakeLock.released) return;
-    wakeLock = await navigator.wakeLock.request('screen');
-    wakeLock.addEventListener('release', () => setTimeout(grabWakeLock, 800));
-  } catch(e) {}
-}
-document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible') grabWakeLock();
-});
-setInterval(grabWakeLock, 20000);
+/* ══════════════════════════════════════
+   CRT SCANLINES — canvas-based (works on
+   all mobiles, no ::before glitch)
+══════════════════════════════════════ */
+(function initCRT(){
+  const c  = document.getElementById('crt-canvas');
+  const cx = c.getContext('2d');
+  function drawCRT(){
+    c.width  = window.innerWidth;
+    c.height = window.innerHeight;
+    cx.clearRect(0,0,c.width,c.height);
+    for(let y=0; y<c.height; y+=4){
+      cx.fillStyle='rgba(0,0,0,0.55)';
+      cx.fillRect(0,y+2,c.width,2);
+    }
+  }
+  drawCRT();
+  window.addEventListener('resize', drawCRT);
+  window.addEventListener('orientationchange', ()=>setTimeout(drawCRT,300));
+})();
 
-/* ════════════════════════════════════════
-   FULLSCREEN — stays fullscreen always
-════════════════════════════════════════ */
-function goFullscreen() {
-  const el = document.documentElement;
-  const req = el.requestFullscreen || el.webkitRequestFullscreen
-            || el.mozRequestFullScreen || el.msRequestFullscreen;
-  if (req) req.call(el).catch(() => {});
+/* ══════════════════════════════════════
+   WAKE LOCK
+══════════════════════════════════════ */
+let wakeLock = null;
+async function grabWakeLock(){
+  if(!('wakeLock' in navigator)) return;
+  try{
+    if(wakeLock && !wakeLock.released) return;
+    wakeLock = await navigator.wakeLock.request('screen');
+    wakeLock.addEventListener('release',()=>setTimeout(grabWakeLock,800));
+  }catch(e){}
 }
-document.addEventListener('fullscreenchange', () => {
-  if (!document.fullscreenElement && userInteracted) setTimeout(goFullscreen, 600);
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='visible') grabWakeLock();
 });
-document.addEventListener('webkitfullscreenchange', () => {
-  if (!document.webkitFullscreenElement && userInteracted) setTimeout(goFullscreen, 600);
+setInterval(grabWakeLock,20000);
+
+/* ══════════════════════════════════════
+   FULLSCREEN
+══════════════════════════════════════ */
+function goFullscreen(){
+  const el = document.documentElement;
+  const fn = el.requestFullscreen || el.webkitRequestFullscreen
+           || el.mozRequestFullScreen || el.msRequestFullscreen;
+  if(fn) fn.call(el).catch(()=>{});
+}
+['fullscreenchange','webkitfullscreenchange','mozfullscreenchange'].forEach(ev=>{
+  document.addEventListener(ev,()=>{
+    const full = document.fullscreenElement
+              || document.webkitFullscreenElement
+              || document.mozFullScreenElement;
+    if(!full && userInteracted) setTimeout(goFullscreen,600);
+  });
 });
-document.addEventListener('mozfullscreenchange', () => {
-  if (!document.mozFullScreenElement && userInteracted) setTimeout(goFullscreen, 600);
-});
-function onFirstInteraction() {
-  if (userInteracted) return;
+function onFirstInteraction(){
+  if(userInteracted) return;
   userInteracted = true;
   goFullscreen();
   grabWakeLock();
 }
 
-/* ════════════════════════════════════════
-   SMOKE PARTICLES
-════════════════════════════════════════ */
-const canvas = document.getElementById('smoke');
-const ctx    = canvas.getContext('2d');
-function resize(){ canvas.width=window.innerWidth; canvas.height=window.innerHeight; }
-resize();
-window.addEventListener('resize', resize);
+/* ══════════════════════════════════════
+   SMOKE
+══════════════════════════════════════ */
+const smokeCanvas = document.getElementById('smoke');
+const sCtx = smokeCanvas.getContext('2d');
+function resizeSmoke(){
+  smokeCanvas.width  = window.innerWidth;
+  smokeCanvas.height = window.innerHeight;
+}
+resizeSmoke();
+window.addEventListener('resize', resizeSmoke);
 
-class Puff {
-  constructor(init){ this.spawn(init); }
-  spawn(init){
-    this.x  = Math.random()*canvas.width;
-    this.y  = init ? Math.random()*canvas.height : canvas.height+30;
-    this.r  = 90+Math.random()*140;
-    this.a  = 0;
-    this.ta = 0.016+Math.random()*0.030;
+class Puff{
+  constructor(i){ this.spawn(i); }
+  spawn(i){
+    this.x  = Math.random()*smokeCanvas.width;
+    this.y  = i ? Math.random()*smokeCanvas.height : smokeCanvas.height+30;
+    this.r  = 90+Math.random()*140; this.a=0;
+    this.ta = 0.016+Math.random()*0.03;
     this.vx = (Math.random()-0.5)*0.14;
     this.vy = -(0.08+Math.random()*0.18);
-    this.age= 0;
-    this.max= 280+Math.random()*200;
+    this.age=0; this.max=280+Math.random()*200;
   }
   tick(){
-    this.age++;
-    this.x+=this.vx; this.y+=this.vy;
+    this.age++; this.x+=this.vx; this.y+=this.vy;
     const t=this.age/this.max;
-    this.a = t<0.2?(t/0.2)*this.ta:t>0.75?((1-t)/0.25)*this.ta:this.ta;
+    this.a=t<0.2?(t/0.2)*this.ta:t>0.75?((1-t)/0.25)*this.ta:this.ta;
     if(this.age>=this.max) this.spawn(false);
   }
   draw(){
-    const g=ctx.createRadialGradient(this.x,this.y,0,this.x,this.y,this.r);
+    const g=sCtx.createRadialGradient(this.x,this.y,0,this.x,this.y,this.r);
     g.addColorStop(0,`rgba(180,170,150,${this.a})`);
     g.addColorStop(1,`rgba(160,158,152,0)`);
-    ctx.fillStyle=g; ctx.beginPath();
-    ctx.arc(this.x,this.y,this.r,0,Math.PI*2); ctx.fill();
+    sCtx.fillStyle=g; sCtx.beginPath();
+    sCtx.arc(this.x,this.y,this.r,0,Math.PI*2); sCtx.fill();
   }
 }
 const puffs=Array.from({length:32},(_,i)=>new Puff(true));
-(function loop(){
-  ctx.clearRect(0,0,canvas.width,canvas.height);
+(function smokeLoop(){
+  sCtx.clearRect(0,0,smokeCanvas.width,smokeCanvas.height);
   puffs.forEach(p=>{p.tick();p.draw();});
-  requestAnimationFrame(loop);
+  requestAnimationFrame(smokeLoop);
 })();
 
-/* ════════════════════════════════════════
+/* ══════════════════════════════════════
    PRELOAD + PROGRESS
-════════════════════════════════════════ */
+══════════════════════════════════════ */
 let loaded=0, progress=0;
 const pbar=document.getElementById('pbar');
 const pnum=document.getElementById('pnum');
@@ -694,20 +688,19 @@ VIDEO_URLS.forEach(url=>{
   if(v.readyState>=3) mark();
 });
 
-const timer=setInterval(()=>{
-  const allReady=loaded>=VIDEO_URLS.length;
-  const cap=allReady?100:85;
+const ticker=setInterval(()=>{
+  const done=loaded>=VIDEO_URLS.length;
   const step=progress<55?1.6:progress<80?0.7:0.25;
-  progress=Math.min(progress+step,cap);
-  if(allReady) progress=Math.min(progress+2,100);
+  progress=Math.min(progress+step,done?100:85);
+  if(done) progress=Math.min(progress+2,100);
   pbar.style.width=progress+'%';
   pnum.textContent=Math.floor(progress)+'%';
-  if(progress>=100){ clearInterval(timer); setTimeout(launch,500); }
+  if(progress>=100){ clearInterval(ticker); setTimeout(launch,500); }
 },40);
 
-/* ════════════════════════════════════════
-   LAUNCH + PLAYER
-════════════════════════════════════════ */
+/* ══════════════════════════════════════
+   DOM REFS
+══════════════════════════════════════ */
 let currentIdx=0;
 const mainVideo        = document.getElementById('main-video');
 const loadScr          = document.getElementById('loading-screen');
@@ -720,47 +713,45 @@ const backBtn          = document.getElementById('back-to-index');
 const unmuteOverlay    = document.getElementById('unmute-overlay');
 const unmuteBtn        = document.getElementById('unmute-btn');
 
-/* HUD touch show/hide */
-let hudTimer = null;
-playerScr.addEventListener('touchstart', () => {
+/* Touch — show counter briefly */
+let hudTimer=null;
+playerScr.addEventListener('touchstart',()=>{
   playerScr.classList.add('hud-visible');
   clearTimeout(hudTimer);
-  hudTimer = setTimeout(() => playerScr.classList.remove('hud-visible'), 3000);
-}, {passive:true});
+  hudTimer=setTimeout(()=>playerScr.classList.remove('hud-visible'),2500);
+},{passive:true});
 
+/* ══════════════════════════════════════
+   LAUNCH
+══════════════════════════════════════ */
 function launch(){
   loadScr.classList.add('fade-out');
   setTimeout(()=>{
     loadScr.style.display='none';
-    const dotsEl=document.getElementById('dots');
-    VIDEO_URLS.forEach((_,i)=>{
-      const d=document.createElement('div');
-      d.className='dot'+(i===0?' active':'');
-      d.onclick=()=>switchTo(i);
-      dotsEl.appendChild(d);
-    });
     playerScr.classList.add('active');
 
-    if (isMobile) {
+    if(isMobile){
       unmuteOverlay.classList.add('show');
-      unmuteBtn.addEventListener('click', () => {
+      unmuteBtn.addEventListener('click',()=>{
         onFirstInteraction();
         unmuteOverlay.classList.remove('show');
-        setTimeout(() => unmuteOverlay.style.display='none', 600);
+        setTimeout(()=>{ unmuteOverlay.style.display='none'; },600);
         playVideo(0);
-      }, {once:true});
+      },{once:true});
     } else {
       onFirstInteraction();
       playVideo(0);
     }
-  }, 900);
+  },900);
 }
 
+/* ══════════════════════════════════════
+   VIDEO PLAYER
+══════════════════════════════════════ */
 function playVideo(idx){
   currentIdx=idx;
   document.getElementById('counter').textContent=
     String(idx+1).padStart(2,'0')+' / '+String(VIDEO_URLS.length).padStart(2,'0');
-  document.querySelectorAll('.dot').forEach((d,i)=>d.classList.toggle('active',i===idx));
   mainVideo.src=VIDEO_URLS[idx];
   mainVideo.load();
   mainVideo.addEventListener('canplay',()=>{
@@ -768,195 +759,191 @@ function playVideo(idx){
     mainVideo.play().catch(()=>{ mainVideo.muted=true; mainVideo.play(); });
   },{once:true});
   mainVideo.onended=()=>{
-    if(idx+1<VIDEO_URLS.length){ playVideo(idx+1); }
-    else { showCredits(); }
+    if(idx+1<VIDEO_URLS.length) playVideo(idx+1);
+    else showCredits();
   };
 }
 
-function switchTo(idx){
-  if(idx===currentIdx) return;
-  mainVideo.pause(); mainVideo.onended=null; playVideo(idx);
-}
-
-function redirectToIndex() {
+/* ══════════════════════════════════════
+   BACK TO HOME — only after credits done
+══════════════════════════════════════ */
+function redirectToIndex(){
   creditScr.classList.remove('active');
   backBtnContainer.classList.remove('visible');
   designerBadge.classList.remove('visible');
-  setTimeout(() => { window.location.href = 'index.html'; }, 1000);
+  document.getElementById('credits-fade').classList.remove('on');
+
+  /* Fade to black then go */
+  blackScr.classList.add('active');
+  setTimeout(()=>{ window.location.href='index.html'; },1200);
 }
+backBtn.addEventListener('click', redirectToIndex);
 
-/* ════════════════════════════════════════
+/* ══════════════════════════════════════
    TYPEWRITER ENGINE
-════════════════════════════════════════ */
-function typeInto(el, html, speed) {
-  return new Promise(resolve => {
-    el.innerHTML = '';
-    const parts = html.split(/(<br>|<br\/>|<strong>|<\/strong>)/g);
-    let queue = [];
-    let inStrong = false;
-
-    for (let part of parts) {
-      if (part === '<strong>') { inStrong = true; continue; }
-      if (part === '</strong>') { inStrong = false; continue; }
-      if (part === '<br>' || part === '<br/>') {
-        queue.push({ type: 'br' });
-      } else {
-        const chars = [...part];
-        for (let char of chars) queue.push({ type: 'char', char, bold:inStrong });
-      }
+══════════════════════════════════════ */
+function typeInto(el, html, speed){
+  return new Promise(resolve=>{
+    el.innerHTML='';
+    const parts=html.split(/(<br>|<br\/>|<strong>|<\/strong>)/g);
+    let queue=[], inStrong=false;
+    for(let p of parts){
+      if(p==='<strong>'){ inStrong=true; continue; }
+      if(p==='</strong>'){ inStrong=false; continue; }
+      if(p==='<br>'||p==='<br/>'){ queue.push({type:'br'}); }
+      else { for(let c of [...p]) queue.push({type:'char',char:c,bold:inStrong}); }
     }
-
-    let i = 0;
-    const cur = document.createElement('span');
-    cur.className = 'tw-cursor';
-    el.appendChild(cur);
-
-    function next() {
-      if (i >= queue.length) { cur.remove(); resolve(); return; }
-      const item = queue[i++];
-      if (item.type === 'br') {
-        const br = document.createElement('br');
-        cur.insertAdjacentElement('beforebegin', br);
-        setTimeout(next, speed * 2);
+    let i=0;
+    const cur=document.createElement('span');
+    cur.className='tw-cursor'; el.appendChild(cur);
+    function next(){
+      if(i>=queue.length){ cur.remove(); resolve(); return; }
+      const item=queue[i++];
+      if(item.type==='br'){
+        cur.insertAdjacentElement('beforebegin',document.createElement('br'));
+        setTimeout(next,speed*2);
       } else {
-        const span = document.createElement(item.bold ? 'strong' : 'span');
-        span.textContent = item.char;
-        cur.insertAdjacentElement('beforebegin', span);
-        let delay = speed;
-        if (item.char === ' ') delay = speed * 0.3;
-        else if (item.char === '.') delay = speed * 1.5;
-        else if (item.char === ',') delay = speed * 0.8;
-        setTimeout(next, delay);
+        const s=document.createElement(item.bold?'strong':'span');
+        s.textContent=item.char;
+        cur.insertAdjacentElement('beforebegin',s);
+        let d=speed;
+        if(item.char===' ') d*=0.3;
+        else if(item.char==='.') d*=1.5;
+        else if(item.char===',') d*=0.8;
+        setTimeout(next,d);
       }
     }
     next();
   });
 }
 
-const isMob = /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent) || window.innerWidth < 768;
-let currentReelY = 0;
+/* ══════════════════════════════════════
+   SCROLL ENGINE
+   Speed: mobile=3.5px/frame  desktop=2.8px/frame
+   (faster on mobile as requested)
+══════════════════════════════════════ */
+let currentReelY=0;
 
-function scrollToEl(targetEl) {
-  return new Promise(resolve => {
-    const reel    = document.getElementById('credits-reel');
-    const rect    = targetEl.getBoundingClientRect();
-    const elTop   = rect.top;
-    const target  = window.innerHeight * 0.35;
-    const delta   = elTop - target;
-    const distance= Math.abs(delta);
-    if(distance < 2){ resolve(); return; }
+function scrollToEl(el){
+  return new Promise(resolve=>{
+    const reel  = document.getElementById('credits-reel');
+    const rect  = el.getBoundingClientRect();
+    const delta = rect.top - window.innerHeight * 0.32;
+    const dist  = Math.abs(delta);
+    if(dist<2){ resolve(); return; }
 
-    const SPEED = isMob ? 1.8 : 2.8;
-    const steps = Math.ceil(distance / SPEED);
-    let step = 0;
-    const dir = delta > 0 ? 1 : -1;
+    /* Mobile gets faster scroll speed */
+    const SPEED = isMobile ? 3.5 : 2.8;
+    const steps = Math.ceil(dist/SPEED);
+    let step=0;
+    const dir = delta>0 ? 1 : -1;
 
     (function tick(){
       step++;
       currentReelY += SPEED * dir;
       reel.style.top = (window.innerHeight - currentReelY) + 'px';
-      const done = step >= steps;
-      if(!done) requestAnimationFrame(tick);
+      if(step<steps) requestAnimationFrame(tick);
       else resolve();
     })();
   });
 }
 
+/* ══════════════════════════════════════
+   CREDITS SEQUENCE
+══════════════════════════════════════ */
 async function runCredits(){
-  const SPD = isMob ? 75 : 50;
+  /* Typing speed: mobile slightly faster to feel snappy */
+  const SPD = isMobile ? 60 : 50;
 
   await scrollToEl(document.getElementById('cTheEnd'));
-  await typeInto(document.getElementById('cTheEnd'), ' THE💖END ', SPD);
+  await typeInto(document.getElementById('cTheEnd'),' THE💖END ',SPD);
   await pause(500);
 
   await scrollToEl(document.getElementById('h1'));
-  await typeInto(document.getElementById('h1'), '🎬 FILM CREDITS 🎬', SPD);
+  await typeInto(document.getElementById('h1'),'🎬 FILM CREDITS 🎬',SPD);
   await pause(200);
 
   await scrollToEl(document.getElementById('r1'));
-  await typeInto(document.getElementById('r1'), '✂️ EDITED BY ✂️', SPD);
-  await typeInto(document.getElementById('n1'), 'BOOBALAN 🎬', SPD);
+  await typeInto(document.getElementById('r1'),'✂️ EDITED BY ✂️',SPD);
+  await typeInto(document.getElementById('n1'),'BOOBALAN 🎬',SPD);
   await pause(150);
 
   await scrollToEl(document.getElementById('r2'));
-  await typeInto(document.getElementById('r2'), '👑 DIRECT BY 👑', SPD);
-  await typeInto(document.getElementById('n2'), 'ADHESHWARAN 🎤', SPD);
+  await typeInto(document.getElementById('r2'),'👑 DIRECT BY 👑',SPD);
+  await typeInto(document.getElementById('n2'),'ADHESHWARAN 🎤',SPD);
   await pause(150);
 
   await scrollToEl(document.getElementById('r3'));
-  await typeInto(document.getElementById('r3'), '🎥 PRODUCED BY 🎥', SPD);
-  await typeInto(document.getElementById('n3'), 'SARAVANAN 🎞️', SPD);
+  await typeInto(document.getElementById('r3'),'🎥 PRODUCED BY 🎥',SPD);
+  await typeInto(document.getElementById('n3'),'SARAVANAN 🎞️',SPD);
   await pause(150);
 
   await scrollToEl(document.getElementById('r4'));
-  await typeInto(document.getElementById('r4'), '📢 PUBLISHED BY 📢', SPD);
-  await typeInto(document.getElementById('n4'), 'ALAGARASAN 🔗', SPD);
+  await typeInto(document.getElementById('r4'),'📢 PUBLISHED BY 📢',SPD);
+  await typeInto(document.getElementById('n4'),'ALAGARASAN 🔗',SPD);
   await pause(600);
 
   await scrollToEl(document.getElementById('h2'));
-  await typeInto(document.getElementById('h2'), '🙏 THANK YOU 🙏', SPD);
+  await typeInto(document.getElementById('h2'),'🙏 THANK YOU 🙏',SPD);
   await scrollToEl(document.getElementById('ty'));
   await typeInto(document.getElementById('ty'),
-    'Thank you for watching this video 💫<br>This was not just a video, but a collection of memories 📸<br>moments that will stay in our hearts forever 💝',
-    SPD);
+    'Thank you for watching this video 💫<br>This was not just a video, but a collection of memories 📸<br>moments that will stay in our hearts forever 💝',SPD);
   await pause(600);
 
   await scrollToEl(document.getElementById('h3'));
-  await typeInto(document.getElementById('h3'), '✨ SPECIAL THANKS ✨', SPD);
+  await typeInto(document.getElementById('h3'),'✨ SPECIAL THANKS ✨',SPD);
   await scrollToEl(document.getElementById('st'));
   await typeInto(document.getElementById('st'),
-    'A heartfelt thanks once again to 🤗<br>' +
-    '<strong>Boobalan</strong> for editing this beautiful memory 🎬❤️<br>' +
-    '<strong>Adheshwaran</strong> for directing it with passion 👑✨, and<br>' +
-    '<strong>Saravanan</strong> for producing and supporting this vision 🎥💫<br>' +
-    '🙌💖',
-    SPD);
+    'A heartfelt thanks once again to 🤗<br>'+
+    '<strong>Boobalan</strong> for editing this beautiful memory 🎬❤️<br>'+
+    '<strong>Adheshwaran</strong> for directing it with passion 👑✨, and<br>'+
+    '<strong>Saravanan</strong> for producing and supporting this vision 🎥💫<br>'+
+    '🙌💖',SPD);
   await pause(600);
 
   await scrollToEl(document.getElementById('h4'));
-  await typeInto(document.getElementById('h4'), '💌 FINAL MESSAGE 💌', SPD);
+  await typeInto(document.getElementById('h4'),'💌 FINAL MESSAGE 💌',SPD);
   await scrollToEl(document.getElementById('fm'));
   await typeInto(document.getElementById('fm'),
-    'Some moments end,<br>but the memories they leave behind never fade 💫',
-    SPD);
+    'Some moments end,<br>but the memories they leave behind never fade 💫',SPD);
   await pause(600);
 
   await scrollToEl(document.getElementById('h5'));
-  await typeInto(document.getElementById('h5'), '📝 MEMORABLE QUOTE 📝', SPD);
+  await typeInto(document.getElementById('h5'),'📝 MEMORABLE QUOTE 📝',SPD);
   await scrollToEl(document.getElementById('mq'));
   await typeInto(document.getElementById('mq'),
-    '💭 "Time may move forward and change many things,<br>but the heart will always remember the moments it once loved." 💕',
-    SPD);
+    '💭 "Time may move forward and change many things,<br>but the heart will always remember the moments it once loved." 💕',SPD);
 
+  /* Credits done — show back button + designer badge */
   await pause(1500);
   document.getElementById('credits-fade').classList.add('on');
+  await pause(400);
   backBtnContainer.classList.add('visible');
-  await pause(500);
+  await pause(600);
   designerBadge.classList.add('visible');
 }
 
 function pause(ms){ return new Promise(r=>setTimeout(r,ms)); }
 
+/* ══════════════════════════════════════
+   SHOW CREDITS
+══════════════════════════════════════ */
 function showCredits(){
   playerScr.classList.remove('active');
   blackScr.classList.add('active');
-
   setTimeout(()=>{
     blackScr.classList.remove('active');
     creditScr.classList.add('active');
-
-    const bgm = document.getElementById('creditsBgm');
-    bgm.volume = 0.6;
+    const bgm=document.getElementById('creditsBgm');
+    bgm.volume=0.6;
     bgm.play().catch(()=>{});
-
-    setTimeout(runCredits, 250);
-  }, 1000);
+    setTimeout(runCredits,250);
+  },1000);
 }
 
-backBtn.addEventListener('click', redirectToIndex);
-
-document.addEventListener('keydown', e => {
-  if (e.key === 'f' || e.key === 'F') goFullscreen();
+/* F key fullscreen on desktop */
+document.addEventListener('keydown',e=>{
+  if(e.key==='f'||e.key==='F') goFullscreen();
 });
 </script>
 </body>
