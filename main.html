@@ -89,17 +89,26 @@
     text-align:center;
   }
 
-  .unmute-btn {
-    padding:clamp(10px,3vw,14px) clamp(28px,8vw,44px);
-    background:linear-gradient(135deg,rgba(255,215,0,0.2),rgba(255,165,0,0.1));
-    border:2px solid #ffd700; border-radius:50px;
-    font-family:'Bebas Neue',sans-serif;
-    font-size:clamp(1rem,4vw,1.6rem);
-    letter-spacing:0.4em; color:#ffd700;
-    cursor:pointer; box-shadow:0 0 30px rgba(255,215,0,0.4);
-    transition:all 0.3s ease; touch-action:manipulation;
-    -webkit-appearance:none;
-  }
+.unmute-btn {
+  padding:clamp(10px,3vw,14px) clamp(28px,8vw,44px);
+  background:linear-gradient(135deg,rgba(255,215,0,0.2),rgba(255,165,0,0.1));
+  border:2px solid #ffd700;
+  border-radius:50px;
+
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(1rem,4vw,1.6rem);
+  letter-spacing:0.4em;
+  color:#ffd700;
+
+  cursor:pointer;
+  box-shadow:0 0 30px rgba(255,215,0,0.4);
+
+  transition:all 0.3s ease;
+  touch-action:manipulation;
+
+  appearance:none;           /* ✅ standard */
+  -webkit-appearance:none;   /* ✅ safari support */
+}
   .unmute-btn:active { transform:scale(0.96); }
 
   /* ══════════════════════════════
@@ -527,7 +536,7 @@
 /* ══════════════════════════════════════
    CONFIG
 ══════════════════════════════════════ */
- const VIDEO_URLS = [
+  const VIDEO_URL = [
   "https://res.cloudinary.com/deatzzrsw/video/upload/v1773795753/saro1_asufyu.mp4",
   "https://res.cloudinary.com/deatzzrsw/video/upload/v1773795721/saro2_xkwbs9.mp4",
   "https://res.cloudinary.com/deatzzrsw/video/upload/v1773795717/saro3_rjc25a.mp4",
@@ -733,9 +742,9 @@ function playVideo(idx){
     mainVideo.play().catch(()=>{ mainVideo.muted=true; mainVideo.play(); });
   },{once:true});
   mainVideo.onended=()=>{
-    if(idx+1<VIDEO_URLS.length) playVideo(idx+1);
-    else showCredits();
-  };
+  if(idx+1<VIDEO_URLS.length) playVideo(idx+1);
+  else showCredits();
+};
 }
 
 /* ══════════════════════════════════════
@@ -903,16 +912,35 @@ function pause(ms){ return new Promise(r=>setTimeout(r,ms)); }
    SHOW CREDITS
 ══════════════════════════════════════ */
 function showCredits(){
+
   playerScr.classList.remove('active');
+
   blackScr.classList.add('active');
+
   setTimeout(()=>{
+
     blackScr.classList.remove('active');
     creditScr.classList.add('active');
-    const bgm=document.getElementById('creditsBgm');
-    bgm.volume=0.6;
+
+    const bgm = document.getElementById('creditsBgm');
+    bgm.volume = 0;
     bgm.play().catch(()=>{});
-    setTimeout(runCredits,250);
-  },1000);
+
+    // 🎵 smooth audio fade
+    let vol = 0;
+    const fadeAudio = setInterval(()=>{
+      vol += 0.05;
+      if(vol >= 0.6){
+        bgm.volume = 0.6;
+        clearInterval(fadeAudio);
+      } else {
+        bgm.volume = vol;
+      }
+    }, 100);
+
+    setTimeout(runCredits, 500);
+
+  }, 100); // fade delay
 }
 
 /* F key fullscreen on desktop */
